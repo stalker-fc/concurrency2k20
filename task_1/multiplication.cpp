@@ -43,14 +43,14 @@ Matrix get_matrix(char* filename) {
 Matrix multiplication(Matrix A, Matrix B) {
     double *data = new double[A.n_rows * B.n_columns];
 
+    double dot;
     for (int i = 0; i < A.n_rows; i++) {
         for (int j = 0; j < B.n_columns; j++) {
-            data[i * B.n_columns + j] = 0.0;
+            dot = 0.0;
             for (int k = 0; k < A.n_columns; k++) {
-                data[i * B.n_columns + j] += A.data[i * A.n_columns + k] * B.data[k * B.n_columns + j];
+                dot += A.data[i * A.n_columns + k] * B.data[k * B.n_columns + j];
             }
-            if (std::fabs(data[i * B.n_columns + j]) < 1.e-14)
-                data[i * B.n_columns + j] = 0.0;
+            data[i * B.n_columns + j] = dot;
         }
     }
 
