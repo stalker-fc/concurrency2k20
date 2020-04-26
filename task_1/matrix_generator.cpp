@@ -12,10 +12,18 @@ int main(int argc, char *argv[]) {
     int n_columns = atoi(argv[1]);
     int n_rows = atoi(argv[2]);
 
-    std::srand(std::time(NULL));
+    std::cout << n_columns << " " << n_rows << std::endl;
+
+    int stime;
+    long ltime;
+
+    ltime = std::time(NULL);
+    stime = (unsigned int) ltime / 2;
+    std::srand(stime);
+
     for (int i = 0; i < n_rows; i++) {
         for (int j = 0; j < n_columns; j++) {
-            std::cout << std::rand() % n_columns << " ";
+            std::cout << std::rand() % 1000 << " ";
         }
         std::cout << std::endl;
     }
