@@ -4,12 +4,12 @@
 
 
 int main(int argc, char *argv[]) {
-    if (argc < 3) {
+    if (argc < 2) {
         std::cerr << "Usage: " << argv[0] << " " << "N_ROWS" << std::endl;
         std::exit(1);
     }
 
-    int n_rows = atoi(argv[2]);
+    int n_rows = atoi(argv[1]);
 
     std::cout << n_rows << std::endl;
 

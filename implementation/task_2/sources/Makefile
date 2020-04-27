@@ -6,6 +6,8 @@ build:
 	g++ -o vector_generator vector_generator.cpp
 
 run:
-	rm A.txt b.txt
 	./matrix_generator $(N) $(N) >> A.txt
 	./vector_generator $(N) >> b.txt
+
+clean:
+	rm A.txt b.txt x.txt
