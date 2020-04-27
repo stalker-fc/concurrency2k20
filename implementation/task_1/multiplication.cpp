@@ -86,7 +86,7 @@ int main(int argc, char *argv[]) {
     Matrix C;
     C = multiplication(A, B);
     auto end_time = std::chrono::steady_clock::now();
-    std::cout << "Multiplication random matrices A(" << A.n_columns << " " << A.n_rows << ")  " ;
+    std::cout << "Multiplication random matrices A(" << A.n_columns << " " << A.n_rows << ") " ;
     std::cout << "and B(" << B.n_columns << " " << B.n_rows << ")  in usual way took: " << std::endl;
     std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << " ms" << std::endl;
 
