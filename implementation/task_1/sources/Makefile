@@ -7,8 +7,8 @@ build:
 	g++ -fopenmp -o openmp_multiplication openmp_multiplication.cpp
 
 run:
-	rm A.txt B.txt
 	./matrix_generator $(N) $(N) >> A.txt
 	./matrix_generator $(N) $(N) >> B.txt
 	./multiplication A.txt B.txt
 	./openmp_multiplication A.txt B.txt
+	rm A.txt B.txt

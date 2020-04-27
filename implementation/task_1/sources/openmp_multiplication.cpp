@@ -26,11 +26,9 @@ Matrix get_matrix(char* filename) {
     input >> n_rows;
 
     double* data = new double[n_columns * n_rows];
-    for (int i = 0; i < n_rows; i++) {
-        for (int j = 0; j < n_columns; j++) {
-            input >> data[i*n_columns + j];
-        }
-    }
+    for (std::size_t i = 0; i < n_columns * n_rows; ++i)
+        input >> data[i];
+
     Matrix matrix;
     matrix.n_rows = n_rows;
     matrix.n_columns = n_columns;
@@ -95,7 +93,7 @@ int main(int argc, char *argv[]) {
     C = multiplication_omp(A, B);
     auto end_time = std::chrono::steady_clock::now();
     std::cout << "Multiplication random matrices A(" << A.n_columns << " " << A.n_rows << ") " ;
-    std::cout << "and B(" << B.n_columns << " " << B.n_rows << ")  in OpenMP way took: " << std::endl;
+    std::cout << "and B(" << B.n_columns << " " << B.n_rows << ") in OpenMP way took: " << std::endl;
     std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << " ms" << std::endl;
 
     return 0;
