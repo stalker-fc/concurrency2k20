@@ -96,7 +96,7 @@ Vector multiplicate_matrix_by_vector(Matrix &A, Vector &b) {
 	return result;
 }
 
-Matrix multiplicate_matrix_by_matrix(Matrix A, Matrix B) {
+Matrix multiplicate_matrix_by_matrix(Matrix &A, Matrix &B) {
     double *data = new double[A.n_rows * B.n_columns];
 
     double dot;
@@ -117,7 +117,7 @@ Matrix multiplicate_matrix_by_matrix(Matrix A, Matrix B) {
     return result;
 }
 
-Matrix substract_matrix_from_matrix(Matrix A, Matrix B) {
+Matrix substract_matrix_from_matrix(Matrix &A, Matrix &B) {
     double *data = new double[A.n_columns * A.n_rows];
 
     for (std::size_t i = 0; i < A.n_rows * A.n_columns; i++)
@@ -133,8 +133,7 @@ Matrix substract_matrix_from_matrix(Matrix A, Matrix B) {
 
 bool is_result_correct(Matrix &matrix, Vector &vector, Vector &result, double eps) {
 	double error = 0.0;
-	Matrix answer;
-	answer = multiplicate_matrix_by_vector(matrix, result);
+	struct Vector answer = multiplicate_matrix_by_vector(matrix, result);
 	bool res = true;
 	//Print (data_matrix, data_vector);
 	//Print (result);
@@ -162,18 +161,16 @@ Vector solve_system_of_linear_equations(Matrix data_matrix, Vector data_vector, 
 	double *A_data = new double[data_matrix.n_columns * data_matrix.n_rows];
 	double *D_data = new double[data_matrix.n_columns * data_matrix.n_rows];
 	double *invD_data = new double[data_matrix.n_columns * data_matrix.n_rows];
-	Matrix B;
+
 	for (std::size_t i = 0; i < data_matrix.n_columns * data_matrix.n_rows; ++i) {
 		A_data[i] = data_matrix.data[i];
 		D_data[i] = 0.0;
 		invD_data[i] = 0.0;
 	}
 
-
 	double *x_data = new double[data_vector.len];
 	double *x1_data = new double[data_vector.len];
 	double *b_data = new double[data_vector.len];
-	Vector g;
 
 	for (std::size_t i = 0; i < data_vector.len; ++i) {
 		b_data[i] = data_vector.data[i];
@@ -206,8 +203,9 @@ Vector solve_system_of_linear_equations(Matrix data_matrix, Vector data_vector, 
 	b.len = data_vector.len;
 	b.data = b_data;
 
-	B = multiplicate_matrix_by_matrix(invD, substract_matrix_from_matrix(D, A));
-	g = multiplicate_matrix_by_vector(invD, b);
+    struct Matrix substraction = substract_matrix_from_matrix(D, A);
+	struct Matrix B = multiplicate_matrix_by_matrix(invD, substraction);
+	struct Vector g = multiplicate_matrix_by_vector(invD, b);
 
 	int k = 0;
 	double dot;
@@ -255,7 +253,11 @@ int main(int argc, char *argv[]) {
     b = get_vector(argv[2]);
 
     auto start_time = std::chrono::steady_clock::now();
-    solve_system_of_linear_equations(A, b, 1e-12);
+    struct Vector solution = solve_system_of_linear_equations(A, b, 1e-12);
+    bool is_correct = is_result_correct(A, b, solution, 1e-12);
+    if (!is_correct) {
+        std::exit(1);
+    }
     auto end_time = std::chrono::steady_clock::now();
     std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << " ms" << std::endl;
 
