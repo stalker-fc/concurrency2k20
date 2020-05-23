@@ -21,9 +21,23 @@ int main(int argc, char *argv[]) {
     stime = (unsigned int) ltime / 2;
     std::srand(stime);
 
+    double *data_matrix = new double[n_columns * n_rows];
+
     for (int i = 0; i < n_rows; i++) {
         for (int j = 0; j < n_columns; j++) {
-            std::cout << std::rand() % 10000 / 1000.0 << " ";
+            data_matrix[i * n_rows + j] = std::rand() % 10000 / 1000.0;
+        }
+    }
+
+    for (int i = 0; i < n_rows; i++) {
+		for (int j = 0; j < n_columns; j++) {
+		    data_matrix[i * n_rows + i] += data_matrix[i * n_rows + j];
+		}
+	}
+
+    for (int i = 0; i < n_rows; i++) {
+        for (int j = 0; j < n_columns; j++) {
+            std::cout << data_matrix[i * n_rows + j] << " ";
         }
         std::cout << std::endl;
     }

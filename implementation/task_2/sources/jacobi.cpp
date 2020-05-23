@@ -6,6 +6,8 @@
 #include <fstream>
 
 
+#define N 3
+
 struct Matrix {
     int n_columns;
     int n_rows;
@@ -154,11 +156,14 @@ bool is_result_correct(Matrix &matrix, Vector &vector, Vector &result, double ep
 
 Vector solve_system_of_linear_equations(Matrix data_matrix, Vector data_vector, double eps)
 {
-	double *A_data = new double[data_matrix.n_columns * data_matrix.n_rows];
-	double *D_data = new double[data_matrix.n_columns * data_matrix.n_rows];
-	double *invD_data = new double[data_matrix.n_columns * data_matrix.n_rows];
+    int N_ROWS = data_matrix.n_rows;
+    int N_COLUMNS = data_matrix.n_columns;
 
-	for (std::size_t i = 0; i < data_matrix.n_columns * data_matrix.n_rows; ++i) {
+	double *A_data = new double[N_COLUMNS * N_ROWS];
+	double *D_data = new double[N_COLUMNS * N_ROWS];
+	double *invD_data = new double[N_COLUMNS * N_ROWS];
+
+	for (std::size_t i = 0; i < N_COLUMNS * N_ROWS; ++i) {
 		A_data[i] = data_matrix.data[i];
 		D_data[i] = 0.0;
 		invD_data[i] = 0.0;
@@ -174,24 +179,24 @@ Vector solve_system_of_linear_equations(Matrix data_matrix, Vector data_vector, 
 		x_data[i] = 0.0;
 	}
 
-	for (std::size_t i = 0; i < data_matrix.n_columns; ++i)	{
-		D_data[i * data_matrix.n_columns + i] = A_data[i * data_matrix.n_columns + i];
-		invD_data[i * data_matrix.n_columns + i] = 1.0 / A_data[i * data_matrix.n_columns + i];
+	for (std::size_t i = 0; i < N_COLUMNS; ++i)	{
+		D_data[i * N_COLUMNS + i] = A_data[i * N_COLUMNS + i];
+		invD_data[i * N_COLUMNS + i] = 1.0 / A_data[i * N_COLUMNS + i];
 	}
 
 	Matrix A;
-	A.n_columns = data_matrix.n_columns;
-	A.n_rows = data_matrix.n_rows;
+	A.n_columns = N_COLUMNS;
+	A.n_rows = N_ROWS;
 	A.data = A_data;
 
 	Matrix D;
-	D.n_columns = data_matrix.n_columns;
-	D.n_rows = data_matrix.n_rows;
+	D.n_columns = N_COLUMNS;
+	D.n_rows = N_ROWS;
 	D.data = D_data;
 
 	Matrix invD;
-	invD.n_columns = data_matrix.n_columns;
-	invD.n_rows = data_matrix.n_rows;
+	invD.n_columns = N_COLUMNS;
+	invD.n_rows = N_ROWS;
 	invD.data = invD_data;
 
 	Vector b;
@@ -224,27 +229,31 @@ Vector solve_system_of_linear_equations(Matrix data_matrix, Vector data_vector, 
 	do
 	{
 		k++;
-		for (std::size_t i = 0; i < data_matrix.n_columns; ++i)
+		for (std::size_t i = 0; i < N_COLUMNS; ++i)
 		{
 			dot = 0.0;
-			for (std::size_t j = 0; j < data_matrix.n_rows; ++j)
-				dot += B.data[i * data_matrix.n_columns + j] * x1_data[j];
+			for (std::size_t j = 0; j < N_ROWS; ++j)
+				dot += B.data[i * N_COLUMNS + j] * x1_data[j];
 			x_data[i] = dot;
 		}
-		for (std::size_t i = 0; i < data_vector.len; ++i)
+		for (std::size_t i = 0; i < N_ROWS; ++i)
 			x_data[i] += g.data[i];
 
 		delta = 0.0;
-		for (std::size_t i = 0; i < data_vector.len; ++i)
+		for (std::size_t i = 0; i < N_ROWS; ++i)
 			delta += (x_data[i] - x1_data[i]) * (x_data[i] - x1_data[i]);
 		delta = std::sqrt(delta);
-		for (std::size_t i = 0; i < data_vector.len; ++i)
+		for (std::size_t i = 0; i < N_ROWS; ++i)
 			x1_data[i] = x_data[i];
 
+		if (delta == std::numeric_limits<double>::infinity()) {
+		    std::cerr << "Incorrect input data. System of linear equations can`t be solved." << std::endl;
+		    exit(1);
+		}
 	} while (delta > eps);
 
     Vector x;
-    x.len = data_vector.len;
+    x.len = N_ROWS;
     x.data = x_data;
 
 	return x;
