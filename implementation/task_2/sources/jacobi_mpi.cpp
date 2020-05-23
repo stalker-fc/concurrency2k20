@@ -301,7 +301,7 @@ Vector solve_system_of_linear_equations_mpi(Matrix data_matrix, Vector data_vect
 
 int main(int argc, char *argv[]) {
     if (argc < 3) {
-        std::cerr << "Usage: " << argv[0] << " " << "N_COLUMNS N_ROWS" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " " << "path_to_matrix path_to_vector" << std::endl;
         std::exit(1);
     }
     struct Matrix A = get_matrix(argv[1]);

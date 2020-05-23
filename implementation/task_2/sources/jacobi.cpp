@@ -260,7 +260,7 @@ Vector solve_system_of_linear_equations(Matrix data_matrix, Vector data_vector, 
 
 int main(int argc, char *argv[]) {
     if (argc < 3) {
-        std::cerr << "Usage: " << argv[0] << " " << "N_COLUMNS N_ROWS" << std::endl;
+        std::cerr << "Usage: " << argv[0] << " " << "path_to_matrix path_to_vector" << std::endl;
         std::exit(1);
     }
     Matrix A;

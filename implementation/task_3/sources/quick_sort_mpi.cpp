@@ -10,15 +10,24 @@
 int procs_rank;
 int procs_count;
 
-int* quick_sort_mpi(int* array) {
-}
+struct Array {
+    std::size_t length;
+    int* data;
+};
+
+
+
+//int* quick_sort_mpi(int* array) {
+//}
+
+
 
 bool is_result_correct(int *sorted_array) {
 	bool is_correct = true;
 	std::size_t n_elems = sizeof(sorted_array) / sizeof(*sorted_array);
 
 	for (std::size_t i = 1; i < n_elems; ++i) {
-        if (sorted_array[i] > sorted_array[i - 1)) {
+        if (sorted_array[i] > sorted_array[i - 1]) {
 			is_correct = false;
 			break;
 		}
@@ -27,7 +36,7 @@ bool is_result_correct(int *sorted_array) {
 	return is_correct;
 }
 
-int* get_array(char* filename) {
+Array get_array(char* filename) {
     std::ifstream input;
     input.open(filename);
     if(!input) {
@@ -35,28 +44,51 @@ int* get_array(char* filename) {
         std::exit(1);
     }
 
-    int BUFFER_SIZE = 1000;
-    int *buffer = new double[BUFFER_SIZE];
+    int *data = NULL;
 
-    int* data;
-    for (std::size_t i = 0; i < n_columns * n_rows; ++i)
-        input >> data[i];
+    int BUFFER_SIZE = 100;
+    int *buffer = new int[BUFFER_SIZE];
+    int current_buffer_length = 0;
+    std::size_t total_array_length = 0;
 
-    Matrix matrix;
-    matrix.n_rows = n_rows;
-    matrix.n_columns = n_columns;
-    matrix.data = data;
+    while (!input.eof()) {
+        input >> buffer[current_buffer_length];
+        if (current_buffer_length == BUFFER_SIZE) {
+            current_buffer_length = 0;
+            if (data) {
+                data = (int*)realloc(data, sizeof(int) * total_array_length);
+                memcpy(&data[total_array_length - current_buffer_length], buffer, sizeof(int) * BUFFER_SIZE);
+            } else {
+                data = (int*)malloc(sizeof(int) * BUFFER_SIZE);
+                memcpy(data, buffer, sizeof(int) * BUFFER_SIZE);
+            }
+        } else {
+            current_buffer_length++;
+            total_array_length++;
+        }
+    }
 
-    return matrix;
+    if (current_buffer_length > 0) {
+        if (data) {
+            data = (int*)realloc(data, sizeof(int) * total_array_length);
+            memcpy(&data[total_array_length - current_buffer_length], buffer, sizeof(int) * current_buffer_length);
+        } else {
+            data = (int*)malloc(sizeof(int) * current_buffer_length);
+            memcpy(data, buffer, sizeof(int) * current_buffer_length);
+        }
+    }
+    Array array;
+    array.length = total_array_length;
+    array.data = data;
+    return array;
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 3) {
-        std::cerr << "Usage: " << argv[0] << " " << "N_COLUMNS N_ROWS" << std::endl;
+    if (argc < 2) {
+        std::cerr << "Usage: " << argv[0] << " " << "Path to file" << std::endl;
         std::exit(1);
     }
-    struct Matrix A = get_matrix(argv[1]);
-    struct Vector b = get_vector(argv[2]);
+    struct Array array = get_array(argv[1]);
 
     int namelen;
     char processor_name[MPI_MAX_PROCESSOR_NAME];
