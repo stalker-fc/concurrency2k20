@@ -139,11 +139,9 @@ bool is_result_correct(Matrix &matrix, Vector &vector, Vector &result, double ep
 	double error = 0.0;
 	struct Vector answer = multiplicate_matrix_by_vector(matrix, result);
 	bool res = true;
-	//Print (data_matrix, data_vector);
-	//Print (result);
+
 	for (std::size_t i = 0; i < vector.len; ++i)
 	{
-	//	printf("%.2f = %.2f\n", ans[i], data_vector[i]);
 		if (fabs(answer.data[i] - vector.data[i]) > eps)
 		{
 			if (fabs(answer.data[i] - vector.data[i]) > error)
@@ -160,60 +158,60 @@ bool is_result_correct(Matrix &matrix, Vector &vector, Vector &result, double ep
 }
 
 Vector solve_system_of_linear_equations_mpi(Matrix data_matrix, Vector data_vector, double eps) {
+	int N_ROWS = data_matrix.n_rows;
+	int N_COLUMNS = data_matrix.n_columns;
+	int local_N_ROWS = data_vector.len / procs_count;
+
 	// declare data for main process
-	double *x_data;
-	double *x1_data;
+	double *x_data = new double[N_ROWS];
     double *B_data;
     double *g_data;
 
 	// declare data for child processes
-	int local_n_rows = data_vector.len / procs_count;
-	double *proc_B_data = new double[data_matrix.n_columns * local_n_rows];
-	double *proc_x_data = new double[local_n_rows];
-	double *proc_g_data = new double[local_n_rows];
+	double *proc_B_data = new double[N_COLUMNS * local_N_ROWS];
+	double *proc_g_data = new double[local_N_ROWS];
+	double *proc_x_data = new double[local_N_ROWS];
 
 	if (procs_rank == 0) {
-	    double *A_data = new double[data_matrix.n_columns * data_matrix.n_rows];
-	    double *D_data = new double[data_matrix.n_columns * data_matrix.n_rows];
-	    double *invD_data = new double[data_matrix.n_columns * data_matrix.n_rows];
+	    double *A_data = new double[N_COLUMNS * N_ROWS];
+	    double *D_data = new double[N_COLUMNS * N_ROWS];
+	    double *invD_data = new double[N_COLUMNS * N_ROWS];
 
-	    for (std::size_t i = 0; i < data_matrix.n_columns * data_matrix.n_rows; ++i) {
+	    for (std::size_t i = 0; i < N_COLUMNS * N_ROWS; ++i) {
             A_data[i] = data_matrix.data[i];
             D_data[i] = 0.0;
             invD_data[i] = 0.0;
         }
 
-	    double *b_data = new double[data_vector.len];
-	    x_data = new double[data_vector.len];
-	    x1_data = new double[data_vector.len];
-	    for (std::size_t i = 0; i < data_vector.len; ++i) {
+	    double *b_data = new double[N_ROWS];
+	    x_data = new double[N_ROWS];
+	    for (std::size_t i = 0; i < N_ROWS; ++i) {
             b_data[i] = data_vector.data[i];
-            x1_data[i] = 0.0;
             x_data[i] = 0.0;
         }
 
-	    for (std::size_t i = 0; i < data_matrix.n_columns; ++i)	{
-            D_data[i * data_matrix.n_columns + i] = A_data[i * data_matrix.n_columns + i];
-            invD_data[i * data_matrix.n_columns + i] = 1.0 / A_data[i * data_matrix.n_columns + i];
+	    for (std::size_t i = 0; i < N_COLUMNS; ++i)	{
+            D_data[i * N_COLUMNS + i] = A_data[i * N_COLUMNS + i];
+            invD_data[i * N_COLUMNS + i] = 1.0 / A_data[i * N_COLUMNS + i];
         }
 
         Matrix A;
-        A.n_columns = data_matrix.n_columns;
-        A.n_rows = data_matrix.n_rows;
+        A.n_columns = N_COLUMNS;
+        A.n_rows = N_ROWS;
         A.data = A_data;
 
         Matrix D;
-        D.n_columns = data_matrix.n_columns;
-        D.n_rows = data_matrix.n_rows;
+        D.n_columns = N_COLUMNS;
+        D.n_rows = N_ROWS;
         D.data = D_data;
 
         Matrix invD;
-        invD.n_columns = data_matrix.n_columns;
-        invD.n_rows = data_matrix.n_rows;
+        invD.n_columns = N_COLUMNS;
+        invD.n_rows = N_ROWS;
         invD.data = invD_data;
 
         Vector b;
-        b.len = data_vector.len;
+        b.len = N_ROWS;
         b.data = b_data;
 
         struct Matrix substraction = substract_matrix_from_matrix(D, A);
@@ -240,55 +238,60 @@ Vector solve_system_of_linear_equations_mpi(Matrix data_matrix, Vector data_vect
 	}
 
 
-	MPI_Bcast(pX, N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-	MPI_Scatter(pB, local_N * N, MPI_DOUBLE, pProcB, local_N * N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Scatter(pG, local_N, MPI_DOUBLE, pProcG, local_N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Bcast(x_data, N_ROWS, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+	MPI_Scatter(B_data, N_COLUMNS * local_N_ROWS, MPI_DOUBLE, proc_B_data, N_COLUMNS * local_N_ROWS, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Scatter(g_data, local_N_ROWS, MPI_DOUBLE, proc_g_data, local_N_ROWS, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
     double t_start = MPI_Wtime();
     double max_delta;
+    double dot;
     do{
-	    for (int i = 0; i < local_N; i++)
+	    for (std::size_t i = 0; i < local_N_ROWS; i++)
         {
-			pProcX[i] = 0.0;
-			for (int j = 0; j < N; j++)
-				pProcX[i] += pProcB[i*N + j] * pX[j];
-			pProcX[i] += pProcG[i];
+			dot = 0.0;
+			for (std::size_t j = 0; j < N_COLUMNS; j++)
+				dot += proc_B_data[i * N_COLUMNS + j] * x_data[j];
+			proc_x_data[i] = dot + proc_g_data[i];
 		}
 		//if(procs_rank == 0) 	printf("%f\n", pProcX[2] );
 
 		double delta = 0.0;
-		for (int i = 0; i < local_N; i++)
-			delta += (pProcX[i] - pX[procs_rank * local_N + i]) * (pProcX[i] - pX[procs_rank * local_N + i]);
-
+		for (std::size_t i = 0; i < local_N_ROWS; i++)
+			delta += (proc_x_data[i] - x_data[procs_rank * local_N_ROWS + i]) *
+			            (proc_x_data[i] - x_data[procs_rank * local_N_ROWS + i]);
 		delta = sqrt(delta);
 		max_delta = 0.0;
 
-		MPI_Allgather(pProcX, local_N, MPI_DOUBLE, pX, local_N, MPI_DOUBLE, MPI_COMM_WORLD);
+		MPI_Allgather(proc_x_data, local_N_ROWS, MPI_DOUBLE, x_data, local_N_ROWS, MPI_DOUBLE, MPI_COMM_WORLD);
 		MPI_Reduce(&delta, &max_delta, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 		MPI_Bcast(&max_delta, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
     } while (max_delta > eps);
 
 
-    if (pProcG.data) {
-        delete[] pProcG.data;
+    if (proc_B_data) {
+        delete[] proc_B_data;
     }
-    if (pProcB.data) {
-        delete[] pProcB.data;
+    if (proc_g_data) {
+        delete[] proc_g_data;
     }
-    if (pProcX.data) {
-        delete[] pProcX.data;
+    if (proc_x_data) {
+        delete[] proc_x_data;
     }
 
 	if (procs_rank == 0) {
-	    if (pG.data) {
-	        delete[] pG.data;
+	    if (g_data) {
+	        delete[] g_data;
 	    }
-	    if (pB.data) {
-	        delete[] pB.data;
+	    if (B_data) {
+	        delete[] B_data;
 	    }
 	}
 
-	return pX;
+    Vector x;
+    x.len = data_vector.len;
+    x.data = x_data;
+
+	return x;
 }
 
 
