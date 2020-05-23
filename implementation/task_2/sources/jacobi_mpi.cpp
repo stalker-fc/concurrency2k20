@@ -320,8 +320,7 @@ int main(int argc, char *argv[]) {
     struct Vector solution = solve_system_of_linear_equations_mpi(A, b, 1e-12);
     bool is_correct = is_result_correct(A, b, solution, 1e-10);
     if (!is_correct) {
-        std::cerr << "Solution hasn`t enough accuracy." << std::endl;
-        std::exit(1);
+        std::cout << "Solution hasn`t enough accuracy." << std::endl;
     }
     auto end_time = std::chrono::steady_clock::now();
     std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << " ms" << std::endl;
