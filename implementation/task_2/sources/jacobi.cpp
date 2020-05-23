@@ -6,8 +6,6 @@
 #include <fstream>
 
 
-#define N 3
-
 struct Matrix {
     int n_columns;
     int n_rows;
@@ -272,8 +270,9 @@ int main(int argc, char *argv[]) {
 
     auto start_time = std::chrono::steady_clock::now();
     struct Vector solution = solve_system_of_linear_equations(A, b, 1e-12);
-    bool is_correct = is_result_correct(A, b, solution, 1e-12);
+    bool is_correct = is_result_correct(A, b, solution, 1e-10);
     if (!is_correct) {
+        std::cerr << "Solution hasn`t enough accuracy." << std::endl;
         std::exit(1);
     }
     auto end_time = std::chrono::steady_clock::now();

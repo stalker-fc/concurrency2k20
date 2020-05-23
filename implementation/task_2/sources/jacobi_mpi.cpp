@@ -265,6 +265,10 @@ Vector solve_system_of_linear_equations_mpi(Matrix data_matrix, Vector data_vect
 		MPI_Allgather(proc_x_data, local_N_ROWS, MPI_DOUBLE, x_data, local_N_ROWS, MPI_DOUBLE, MPI_COMM_WORLD);
 		MPI_Reduce(&delta, &max_delta, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
 		MPI_Bcast(&max_delta, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+		if (max_delta == std::numeric_limits<double>::infinity()) {
+		    std::cerr << "Incorrect input data. System of linear equations can`t be solved." << std::endl;
+		    exit(1);
+		}
     } while (max_delta > eps);
 
 
@@ -314,9 +318,9 @@ int main(int argc, char *argv[]) {
 
     auto start_time = std::chrono::steady_clock::now();
     struct Vector solution = solve_system_of_linear_equations_mpi(A, b, 1e-12);
-    print_vector(solution);
-    bool is_correct = is_result_correct(A, b, solution, 1e-12);
+    bool is_correct = is_result_correct(A, b, solution, 1e-10);
     if (!is_correct) {
+        std::cerr << "Solution hasn`t enough accuracy." << std::endl;
         std::exit(1);
     }
     auto end_time = std::chrono::steady_clock::now();
