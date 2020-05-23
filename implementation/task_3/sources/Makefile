@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-N := 110
+N := 20
 
 build:
 	g++ -o array_generator array_generator.cpp
