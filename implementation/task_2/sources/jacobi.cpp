@@ -177,7 +177,6 @@ Vector solve_system_of_linear_equations(Matrix data_matrix, Vector data_vector, 
 		x1_data[i] = 0.0;
 		x_data[i] = 0.0;
 	}
-	double delta;
 
 	for (std::size_t i = 0; i < data_matrix.n_columns; ++i)	{
 		D_data[i * data_matrix.n_columns + i] = A_data[i * data_matrix.n_columns + i];
@@ -207,8 +206,22 @@ Vector solve_system_of_linear_equations(Matrix data_matrix, Vector data_vector, 
 	struct Matrix B = multiplicate_matrix_by_matrix(invD, substraction);
 	struct Vector g = multiplicate_matrix_by_vector(invD, b);
 
+	if (A.data) {
+	    delete[] A.data;
+	}
+	if (D.data) {
+	    delete[] D.data;
+	}
+	if (invD.data) {
+	    delete[] invD.data;
+	}
+	if (b.data) {
+	    delete[] b.data;
+	}
+
 	int k = 0;
 	double dot;
+	double delta;
 	do
 	{
 		// /printf("\nIt`s fine %d", k);
