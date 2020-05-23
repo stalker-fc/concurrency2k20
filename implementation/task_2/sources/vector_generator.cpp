@@ -21,7 +21,7 @@ int main(int argc, char *argv[]) {
     std::srand(stime);
 
     for (int i = 0; i < n_rows; i++)
-        std::cout << std::rand() % 1000 << std::endl;
+        std::cout << std::rand() % 10000 / 100.0 << std::endl;
 
     return 0;
 }

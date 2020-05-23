@@ -23,7 +23,7 @@ int main(int argc, char *argv[]) {
 
     for (int i = 0; i < n_rows; i++) {
         for (int j = 0; j < n_columns; j++) {
-            std::cout << std::rand() % 1000 << " ";
+            std::cout << std::rand() % 10000 / 1000.0 << " ";
         }
         std::cout << std::endl;
     }
