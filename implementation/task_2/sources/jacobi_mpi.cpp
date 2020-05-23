@@ -8,7 +8,7 @@
 
 
 int procs_rank;
-int procs_count;
+int procs_num;
 
 struct Matrix {
     int n_columns;
@@ -160,7 +160,7 @@ bool is_result_correct(Matrix &matrix, Vector &vector, Vector &result, double ep
 Vector solve_system_of_linear_equations_mpi(Matrix data_matrix, Vector data_vector, double eps) {
 	int N_ROWS = data_matrix.n_rows;
 	int N_COLUMNS = data_matrix.n_columns;
-	int local_N_ROWS = data_vector.len / procs_count;
+	int local_N_ROWS = data_vector.len / procs_num;
 
 	// declare data for main process
 	double *x_data = new double[N_ROWS];
@@ -312,7 +312,7 @@ int main(int argc, char *argv[]) {
     MPI_Status Status;
 
     MPI_Init(&argc, &argv);
-    MPI_Comm_size(MPI_COMM_WORLD, &procs_count);
+    MPI_Comm_size(MPI_COMM_WORLD, &procs_num);
     MPI_Comm_rank(MPI_COMM_WORLD, &procs_rank);
     MPI_Get_processor_name(processor_name, &namelen);
 
