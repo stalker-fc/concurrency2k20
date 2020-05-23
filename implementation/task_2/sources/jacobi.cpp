@@ -135,11 +135,8 @@ bool is_result_correct(Matrix &matrix, Vector &vector, Vector &result, double ep
 	double error = 0.0;
 	struct Vector answer = multiplicate_matrix_by_vector(matrix, result);
 	bool res = true;
-	//Print (data_matrix, data_vector);
-	//Print (result);
 	for (std::size_t i = 0; i < vector.len; ++i)
 	{
-	//	printf("%.2f = %.2f\n", ans[i], data_vector[i]);
 		if (fabs(answer.data[i] - vector.data[i]) > eps)
 		{
 			if (fabs(answer.data[i] - vector.data[i]) > error)
@@ -148,7 +145,6 @@ bool is_result_correct(Matrix &matrix, Vector &vector, Vector &result, double ep
 		}
 	}
 	std::cout << "error = " << error << std::endl;
-	//printf(res ? "\nCorrect" : "\nIncorrect");
     if (answer.data) {
         delete[] answer.data;
     }
@@ -218,15 +214,16 @@ Vector solve_system_of_linear_equations(Matrix data_matrix, Vector data_vector, 
 	if (b.data) {
 	    delete[] b.data;
 	}
+	if (substraction.data) {
+	    delete[] substraction.data;
+	}
 
 	int k = 0;
 	double dot;
 	double delta;
 	do
 	{
-		// /printf("\nIt`s fine %d", k);
 		k++;
-
 		for (std::size_t i = 0; i < data_matrix.n_columns; ++i)
 		{
 			dot = 0.0;
@@ -234,7 +231,6 @@ Vector solve_system_of_linear_equations(Matrix data_matrix, Vector data_vector, 
 				dot += B.data[i * data_matrix.n_columns + j] * x1_data[j];
 			x_data[i] = dot;
 		}
-		//printf("%f\n", x[2]);
 		for (std::size_t i = 0; i < data_vector.len; ++i)
 			x_data[i] += g.data[i];
 

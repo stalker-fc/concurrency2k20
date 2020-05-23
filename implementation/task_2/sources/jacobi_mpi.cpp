@@ -160,20 +160,17 @@ bool is_result_correct(Matrix &matrix, Vector &vector, Vector &result, double ep
 }
 
 Vector solve_system_of_linear_equations_mpi(Matrix data_matrix, Vector data_vector, double eps) {
-	int local_N = N / procs_count;
-	double *pProcB = new double[N * local_N];
+	// declare data for main process
+	double *x_data;
+	double *x1_data;
+    double *B_data;
+    double *g_data;
 
-	double *pX = new double[N];
-	double *pProcX = new double[local_N];
-	double *pG;
-	double *pProcG = new double[local_N];
-
-	double *x_data = new double[data_vector.len];
-	double *x1_data = new double[data_vector.len];
-
-    Matrix B;
-    Vector g;
-
+	// declare data for child processes
+	int local_n_rows = data_vector.len / procs_count;
+	double *proc_B_data = new double[data_matrix.n_columns * local_n_rows];
+	double *proc_x_data = new double[local_n_rows];
+	double *proc_g_data = new double[local_n_rows];
 
 	if (procs_rank == 0) {
 	    double *A_data = new double[data_matrix.n_columns * data_matrix.n_rows];
@@ -187,6 +184,8 @@ Vector solve_system_of_linear_equations_mpi(Matrix data_matrix, Vector data_vect
         }
 
 	    double *b_data = new double[data_vector.len];
+	    x_data = new double[data_vector.len];
+	    x1_data = new double[data_vector.len];
 	    for (std::size_t i = 0; i < data_vector.len; ++i) {
             b_data[i] = data_vector.data[i];
             x1_data[i] = 0.0;
@@ -218,43 +217,12 @@ Vector solve_system_of_linear_equations_mpi(Matrix data_matrix, Vector data_vect
         b.data = b_data;
 
         struct Matrix substraction = substract_matrix_from_matrix(D, A);
-
-
-
-
-		double *pA =  new double[N * N];
-		double* D = new double[N * N];
-		double* invD = new double[N * N];
-		for (int i = 0; i < N * N; i++)
-		{
-			pA[i] = data_matrix[i];
-			invD[i] = 0.0;
-			D[i] = 0.0;
-		}
-
-		double *b = new double[N];
-		pG = new double[N];
-		pB = new double[N * N];
-
-
-		for(int i = 0; i < N; i++){
-			pX[i] = 0.0;
-			b[i] = data_vector[i];
-		}
-
-		for (int i = 0; i < N; i++)
-		{
-			D[i*N + i] = pA[i*N + i];
-			invD[i*N + i] = 1.0 / pA[i*N + i];
-		}
-
         struct Matrix B = multiplicate_matrix_by_matrix(invD, substraction);
 	    struct Vector g = multiplicate_matrix_by_vector(invD, b);
+	    B_data = B.data;
+	    g_data = g.data;
 
-		pB = Multiplication(invD, Subtraction(D, pA), true);
-		pG = Multiplication(invD, b);
-
-        if (A.data) {
+	    if (A.data) {
             delete[] A.data;
         }
         if (D.data) {
@@ -266,11 +234,10 @@ Vector solve_system_of_linear_equations_mpi(Matrix data_matrix, Vector data_vect
         if (b.data) {
             delete[] b.data;
         }
-
-
-
+	    if (substraction.data) {
+	        delete[] substraction.data;
+	    }
 	}
-
 
 
 	MPI_Bcast(pX, N, MPI_DOUBLE, 0, MPI_COMM_WORLD);
