@@ -4,7 +4,7 @@
 
 
 int main(int argc, char *argv[]) {
-    if (argc < 4) {
+    if (argc < 3) {
         std::cerr << "Usage: " << argv[0] << " "
                   << "`path/to/array.txt` "
                   << "mode: [`1` for sequential solution, `2` for mpi solution]"

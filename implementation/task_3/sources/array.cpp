@@ -1,3 +1,4 @@
+#include <cstring>
 #include <iomanip>
 #include <iostream>
 #include <cstdlib>
@@ -14,10 +15,10 @@ bool is_result_correct(Array array) {
     return true;
 }
 
-Array get_array(char* filename) {
+Array get_array(char *filename) {
     std::ifstream input;
     input.open(filename);
-    if(!input) {
+    if (!input) {
         std::cout << "Unable to open file";
         std::exit(1);
     }
@@ -34,11 +35,11 @@ Array get_array(char* filename) {
         if (current_buffer_length == BUFFER_SIZE) {
             current_buffer_length = 0;
             if (data) {
-                data = (int*)realloc(data, sizeof(int) * total_array_length);
-                memcpy(&data[total_array_length - current_buffer_length], buffer, sizeof(int) * BUFFER_SIZE);
+                data = (int *) realloc(data, sizeof(int) * total_array_length);
+                std::memcpy(&data[total_array_length - current_buffer_length], buffer, sizeof(int) * BUFFER_SIZE);
             } else {
-                data = (int*)malloc(sizeof(int) * BUFFER_SIZE);
-                memcpy(data, buffer, sizeof(int) * BUFFER_SIZE);
+                data = (int *) malloc(sizeof(int) * BUFFER_SIZE);
+                std::memcpy(data, buffer, sizeof(int) * BUFFER_SIZE);
             }
         } else {
             current_buffer_length++;
@@ -48,11 +49,11 @@ Array get_array(char* filename) {
 
     if (current_buffer_length > 0) {
         if (data) {
-            data = (int*)realloc(data, sizeof(int) * total_array_length);
-            memcpy(&data[total_array_length - current_buffer_length], buffer, sizeof(int) * current_buffer_length);
+            data = (int *) realloc(data, sizeof(int) * total_array_length);
+            std::memcpy(&data[total_array_length - current_buffer_length], buffer, sizeof(int) * current_buffer_length);
         } else {
-            data = (int*)malloc(sizeof(int) * current_buffer_length);
-            memcpy(data, buffer, sizeof(int) * current_buffer_length);
+            data = (int *) malloc(sizeof(int) * current_buffer_length);
+            std::memcpy(data, buffer, sizeof(int) * current_buffer_length);
         }
     }
     Array array;

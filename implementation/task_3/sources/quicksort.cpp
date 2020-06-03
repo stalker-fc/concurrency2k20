@@ -33,7 +33,7 @@ void quicksort(int* array, int left_index, int right_index) {
     if (left_index < right_index)
 	{
 		int pivot = get_partition(array, left_index, right_index);
-		quick_sort(array, left_index, pivot);
-		quick_sort(array, pivot + 1, right_index);
+		quicksort(array, left_index, pivot);
+		quicksort(array, pivot + 1, right_index);
 	}
 }
