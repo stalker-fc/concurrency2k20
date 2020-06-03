@@ -1,8 +1,6 @@
 #ifndef MULTIPLICATION_JACOBI_H
 #define MULTIPLICATION_JACOBI_H
 
-int procs_rank;
-int procs_num;
 
 struct Matrix {
     int n_columns;
@@ -35,6 +33,6 @@ Vector solve_system_of_linear_equations(Matrix data_matrix, Vector data_vector, 
 
 Vector solve_system_of_linear_equations_mpi(Matrix data_matrix, Vector data_vector, double eps);
 
-void init_MPI();
+void init_MPI(int argc, char *argv[]);
 
 #endif //MULTIPLICATION_JACOBI_H

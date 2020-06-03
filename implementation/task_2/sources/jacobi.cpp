@@ -8,12 +8,13 @@
 #include "jacobi.h"
 
 
+int procs_rank;
+int procs_num;
 
-
-Matrix get_matrix(char* filename) {
+Matrix get_matrix(char *filename) {
     std::ifstream input;
     input.open(filename);
-    if(!input) {
+    if (!input) {
         std::cout << "Unable to open file";
         std::exit(1);
     }
@@ -22,7 +23,7 @@ Matrix get_matrix(char* filename) {
     input >> n_columns;
     input >> n_rows;
 
-    double* data = new double[n_columns * n_rows];
+    double *data = new double[n_columns * n_rows];
     for (std::size_t i = 0; i < n_columns * n_rows; ++i)
         input >> data[i];
 
@@ -34,17 +35,17 @@ Matrix get_matrix(char* filename) {
     return matrix;
 }
 
-Vector get_vector(char* filename) {
+Vector get_vector(char *filename) {
     std::ifstream input;
     input.open(filename);
-    if(!input) {
+    if (!input) {
         std::cout << "Unable to open file";
         std::exit(1);
     }
     int len;
     input >> len;
 
-    double* data = new double[len];
+    double *data = new double[len];
     for (std::size_t i = 0; i < len; ++i) {
         input >> data[i];
     }
@@ -76,16 +77,16 @@ Vector multiplicate_matrix_by_vector(Matrix &A, Vector &b) {
     double *data = new double[b.len];
 
     double dot;
-	for (std::size_t i = 0; i < A.n_columns; i++) {
-		dot = 0.0;
-		for (std::size_t j = 0; j < b.len; j++)
-			dot += A.data[i*A.n_columns + j] * b.data[j];
-		data[i] = dot;
-	}
-	Vector result;
-	result.len = b.len;
-	result.data = data;
-	return result;
+    for (std::size_t i = 0; i < A.n_columns; i++) {
+        dot = 0.0;
+        for (std::size_t j = 0; j < b.len; j++)
+            dot += A.data[i * A.n_columns + j] * b.data[j];
+        data[i] = dot;
+    }
+    Vector result;
+    result.len = b.len;
+    result.data = data;
+    return result;
 }
 
 Matrix multiplicate_matrix_by_matrix(Matrix &A, Matrix &B) {
@@ -113,140 +114,135 @@ Matrix substract_matrix_from_matrix(Matrix &A, Matrix &B) {
     double *data = new double[A.n_columns * A.n_rows];
 
     for (std::size_t i = 0; i < A.n_rows * A.n_columns; i++)
-    	data[i] = A.data[i] - B.data[i];
+        data[i] = A.data[i] - B.data[i];
 
     Matrix result;
     result.n_rows = A.n_rows;
     result.n_columns = A.n_columns;
     result.data = data;
-	return result;
+    return result;
 }
 
 
 bool is_result_correct(Matrix &matrix, Vector &vector, Vector &result, double eps) {
-	double error = 0.0;
-	struct Vector answer = multiplicate_matrix_by_vector(matrix, result);
-	bool res = true;
-	for (std::size_t i = 0; i < vector.len; ++i)
-	{
-		if (fabs(answer.data[i] - vector.data[i]) > eps)
-		{
-			if (fabs(answer.data[i] - vector.data[i]) > error)
-				error = fabs(answer.data[i] - vector.data[i]);
-			res = false;
-		}
-	}
-	std::cout << "error = " << error << std::endl;
+    double error = 0.0;
+    struct Vector answer = multiplicate_matrix_by_vector(matrix, result);
+    bool res = true;
+    for (std::size_t i = 0; i < vector.len; ++i) {
+        if (fabs(answer.data[i] - vector.data[i]) > eps) {
+            if (fabs(answer.data[i] - vector.data[i]) > error)
+                error = fabs(answer.data[i] - vector.data[i]);
+            res = false;
+        }
+    }
+    std::cout << "error = " << error << std::endl;
     if (answer.data) {
         delete[] answer.data;
     }
 
-	return res;
+    return res;
 }
 
-Vector solve_system_of_linear_equations(Matrix data_matrix, Vector data_vector, double eps)
-{
+Vector solve_system_of_linear_equations(Matrix data_matrix, Vector data_vector, double eps) {
     int N_ROWS = data_matrix.n_rows;
     int N_COLUMNS = data_matrix.n_columns;
 
-	double *A_data = new double[N_COLUMNS * N_ROWS];
-	double *D_data = new double[N_COLUMNS * N_ROWS];
-	double *invD_data = new double[N_COLUMNS * N_ROWS];
+    double *A_data = new double[N_COLUMNS * N_ROWS];
+    double *D_data = new double[N_COLUMNS * N_ROWS];
+    double *invD_data = new double[N_COLUMNS * N_ROWS];
 
-	for (std::size_t i = 0; i < N_COLUMNS * N_ROWS; ++i) {
-		A_data[i] = data_matrix.data[i];
-		D_data[i] = 0.0;
-		invD_data[i] = 0.0;
-	}
+    for (std::size_t i = 0; i < N_COLUMNS * N_ROWS; ++i) {
+        A_data[i] = data_matrix.data[i];
+        D_data[i] = 0.0;
+        invD_data[i] = 0.0;
+    }
 
-	double *x_data = new double[data_vector.len];
-	double *x1_data = new double[data_vector.len];
-	double *b_data = new double[data_vector.len];
+    double *x_data = new double[data_vector.len];
+    double *x1_data = new double[data_vector.len];
+    double *b_data = new double[data_vector.len];
 
-	for (std::size_t i = 0; i < data_vector.len; ++i) {
-		b_data[i] = data_vector.data[i];
-		x1_data[i] = 0.0;
-		x_data[i] = 0.0;
-	}
+    for (std::size_t i = 0; i < data_vector.len; ++i) {
+        b_data[i] = data_vector.data[i];
+        x1_data[i] = 0.0;
+        x_data[i] = 0.0;
+    }
 
-	for (std::size_t i = 0; i < N_COLUMNS; ++i)	{
-		D_data[i * N_COLUMNS + i] = A_data[i * N_COLUMNS + i];
-		invD_data[i * N_COLUMNS + i] = 1.0 / A_data[i * N_COLUMNS + i];
-	}
+    for (std::size_t i = 0; i < N_COLUMNS; ++i) {
+        D_data[i * N_COLUMNS + i] = A_data[i * N_COLUMNS + i];
+        invD_data[i * N_COLUMNS + i] = 1.0 / A_data[i * N_COLUMNS + i];
+    }
 
-	Matrix A;
-	A.n_columns = N_COLUMNS;
-	A.n_rows = N_ROWS;
-	A.data = A_data;
+    Matrix A;
+    A.n_columns = N_COLUMNS;
+    A.n_rows = N_ROWS;
+    A.data = A_data;
 
-	Matrix D;
-	D.n_columns = N_COLUMNS;
-	D.n_rows = N_ROWS;
-	D.data = D_data;
+    Matrix D;
+    D.n_columns = N_COLUMNS;
+    D.n_rows = N_ROWS;
+    D.data = D_data;
 
-	Matrix invD;
-	invD.n_columns = N_COLUMNS;
-	invD.n_rows = N_ROWS;
-	invD.data = invD_data;
+    Matrix invD;
+    invD.n_columns = N_COLUMNS;
+    invD.n_rows = N_ROWS;
+    invD.data = invD_data;
 
-	Vector b;
-	b.len = data_vector.len;
-	b.data = b_data;
+    Vector b;
+    b.len = data_vector.len;
+    b.data = b_data;
 
     struct Matrix substraction = substract_matrix_from_matrix(D, A);
-	struct Matrix B = multiplicate_matrix_by_matrix(invD, substraction);
-	struct Vector g = multiplicate_matrix_by_vector(invD, b);
+    struct Matrix B = multiplicate_matrix_by_matrix(invD, substraction);
+    struct Vector g = multiplicate_matrix_by_vector(invD, b);
 
-	if (A.data) {
-	    delete[] A.data;
-	}
-	if (D.data) {
-	    delete[] D.data;
-	}
-	if (invD.data) {
-	    delete[] invD.data;
-	}
-	if (b.data) {
-	    delete[] b.data;
-	}
-	if (substraction.data) {
-	    delete[] substraction.data;
-	}
+    if (A.data) {
+        delete[] A.data;
+    }
+    if (D.data) {
+        delete[] D.data;
+    }
+    if (invD.data) {
+        delete[] invD.data;
+    }
+    if (b.data) {
+        delete[] b.data;
+    }
+    if (substraction.data) {
+        delete[] substraction.data;
+    }
 
-	int k = 0;
-	double dot;
-	double delta;
-	do
-	{
-		k++;
-		for (std::size_t i = 0; i < N_COLUMNS; ++i)
-		{
-			dot = 0.0;
-			for (std::size_t j = 0; j < N_ROWS; ++j)
-				dot += B.data[i * N_COLUMNS + j] * x1_data[j];
-			x_data[i] = dot;
-		}
-		for (std::size_t i = 0; i < N_ROWS; ++i)
-			x_data[i] += g.data[i];
+    int k = 0;
+    double dot;
+    double delta;
+    do {
+        k++;
+        for (std::size_t i = 0; i < N_COLUMNS; ++i) {
+            dot = 0.0;
+            for (std::size_t j = 0; j < N_ROWS; ++j)
+                dot += B.data[i * N_COLUMNS + j] * x1_data[j];
+            x_data[i] = dot;
+        }
+        for (std::size_t i = 0; i < N_ROWS; ++i)
+            x_data[i] += g.data[i];
 
-		delta = 0.0;
-		for (std::size_t i = 0; i < N_ROWS; ++i)
-			delta += (x_data[i] - x1_data[i]) * (x_data[i] - x1_data[i]);
-		delta = std::sqrt(delta);
-		for (std::size_t i = 0; i < N_ROWS; ++i)
-			x1_data[i] = x_data[i];
+        delta = 0.0;
+        for (std::size_t i = 0; i < N_ROWS; ++i)
+            delta += (x_data[i] - x1_data[i]) * (x_data[i] - x1_data[i]);
+        delta = std::sqrt(delta);
+        for (std::size_t i = 0; i < N_ROWS; ++i)
+            x1_data[i] = x_data[i];
 
-		if (delta == std::numeric_limits<double>::infinity()) {
-		    std::cerr << "Incorrect input data. System of linear equations can`t be solved." << std::endl;
-		    exit(1);
-		}
-	} while (delta > eps);
+        if (delta == std::numeric_limits<double>::infinity()) {
+            std::cerr << "Incorrect input data. System of linear equations can`t be solved." << std::endl;
+            exit(1);
+        }
+    } while (delta > eps);
 
     Vector x;
     x.len = N_ROWS;
     x.data = x_data;
 
-	return x;
+    return x;
 }
 
 Vector solve_system_of_linear_equations_mpi(Matrix data_matrix, Vector data_vector, double eps) {
@@ -282,7 +278,7 @@ Vector solve_system_of_linear_equations_mpi(Matrix data_matrix, Vector data_vect
             x_data[i] = 0.0;
         }
 
-        for (std::size_t i = 0; i < N_COLUMNS; ++i)	{
+        for (std::size_t i = 0; i < N_COLUMNS; ++i) {
             D_data[i * N_COLUMNS + i] = A_data[i * N_COLUMNS + i];
             invD_data[i * N_COLUMNS + i] = 1.0 / A_data[i * N_COLUMNS + i];
         }
@@ -331,21 +327,19 @@ Vector solve_system_of_linear_equations_mpi(Matrix data_matrix, Vector data_vect
 
 
     MPI_Bcast(x_data, N_ROWS, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-    MPI_Scatter(B_data, N_COLUMNS * local_N_ROWS, MPI_DOUBLE, proc_B_data, N_COLUMNS * local_N_ROWS, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Scatter(B_data, N_COLUMNS * local_N_ROWS, MPI_DOUBLE, proc_B_data, N_COLUMNS * local_N_ROWS, MPI_DOUBLE, 0,
+                MPI_COMM_WORLD);
     MPI_Scatter(g_data, local_N_ROWS, MPI_DOUBLE, proc_g_data, local_N_ROWS, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
-    double t_start = MPI_Wtime();
     double max_delta;
     double dot;
-    do{
-        for (std::size_t i = 0; i < local_N_ROWS; i++)
-        {
+    do {
+        for (std::size_t i = 0; i < local_N_ROWS; i++) {
             dot = 0.0;
             for (std::size_t j = 0; j < N_COLUMNS; j++)
                 dot += proc_B_data[i * N_COLUMNS + j] * x_data[j];
             proc_x_data[i] = dot + proc_g_data[i];
         }
-        //if(procs_rank == 0) 	printf("%f\n", pProcX[2] );
 
         double delta = 0.0;
         for (std::size_t i = 0; i < local_N_ROWS; i++)

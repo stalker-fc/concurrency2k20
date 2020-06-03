@@ -13,7 +13,6 @@ TEST_CASES = {
     0: (100, 100, 100),
     1: (250, 250, 250),
     2: (500, 500, 500),
-    3: (1000, 1000, 1000),
 }
 MODES = [1, 2]
 
@@ -80,7 +79,7 @@ def plot_results(benchmark_results: List[BenchmarkResult]):
     ax.set_xlabel('Тестовые случаи, [количество строк]х[количество столбцов]', fontsize=6)
     ax.set_ylabel('Время работы программы, сек', fontsize=6)
     ax.set_xticks(list(TEST_CASES.keys()))
-    ax.set_xticklabels([f'{n_rows} x {n_columns}' for (n_rows, n_columns) in TEST_CASES.values()],
+    ax.set_xticklabels([f'[{n_rows} x {n_columns}]' for (n_rows, n_columns, _) in TEST_CASES.values()],
                        fontdict={
                            'fontsize': 5
                        })
@@ -109,8 +108,7 @@ def plot_results(benchmark_results: List[BenchmarkResult]):
     for test_case, group in groupped_by_test_cases_benchmark_result.items():
         group = list(sorted(group, key=lambda x: x.mode))
         print(f'\n### Test Case {test_case} '
-              f'[{TEST_CASES[test_case][0]} x {TEST_CASES[test_case][1]}] * '
-              f'[{TEST_CASES[test_case][1]} x {TEST_CASES[test_case][0]}]'
+              f'[{TEST_CASES[test_case][0]} x {TEST_CASES[test_case][1]}] * [{TEST_CASES[test_case][2]}]'
               )
         for res in group:
             print(f'- {mode_descriptions[res.mode]}: {res.execution_time_sec} сек')

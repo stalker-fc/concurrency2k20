@@ -11,18 +11,22 @@ int main(int argc, char *argv[]) {
         std::exit(1);
     }
     Matrix A;
-    Matrix B;
-    A = get_matrix_from_file(argv[1]);
-    B = get_matrix_from_file(argv[2]);
+    Vector b;
+    A = get_matrix(argv[1]);
+    b = get_vector(argv[2]);
 
     int mode = atoi(argv[3]);
 
-    Matrix result;
+    Vector solution;
     if (mode == 1) {
-        struct Vector solution = solve_system_of_linear_equations(A, B, 1e-12);
+        struct Vector data = solve_system_of_linear_equations(A, b, 1e-12);
+        solution.len = data.len;
+        solution.data = data.data;
     } else if (mode == 2) {
         init_MPI(argc, argv);
-        struct Vector solution = solve_system_of_linear_equations_mpi(A, B, 1e-12);
+        struct Vector data = solve_system_of_linear_equations_mpi(A, b, 1e-12);
+        solution.len = data.len;
+        solution.data = data.data;
     } else {
         std::cerr << "Incorrect mode value. It must be 1 or 2." << std::endl;
         std::exit(1);
