@@ -84,20 +84,28 @@ def plot_results(benchmark_results: List[BenchmarkResult]):
         )
     ax.legend(handles=legends, loc='best', fontsize=6)
 
-    groupped_benchmark_results = {mode: [] for mode in MODES}
+    groupped_by_modes_benchmark_results = {mode: [] for mode in MODES}
     for res in benchmark_results:
-        groupped_benchmark_results[res.mode].append(res)
-    for mode, group in groupped_benchmark_results.items():
+        groupped_by_modes_benchmark_results[res.mode].append(res)
+
+    for mode, group in groupped_by_modes_benchmark_results.items():
         group = list(sorted(group, key=lambda x: x.test_case))
         execution_times = [res.execution_time_sec for res in group]
         test_cases = [res.test_case for res in group]
         ax.plot(test_cases, execution_times, marker='o', color=mode_colors[mode])
-        print(f'\n\n### {mode} {mode_descriptions[mode]}')
+
+    groupped_by_test_cases_benchmark_result = {test_case: [] for test_case in TEST_CASES.keys()}
+    for res in benchmark_results:
+        groupped_by_test_cases_benchmark_result[res.test_case].append(res)
+
+    for test_case, group in groupped_by_test_cases_benchmark_result.items():
+        group = list(sorted(group, key=lambda x: x.mode))
+        print(f'\n### Test Case {test_case} '
+              f'[{TEST_CASES[test_case][0]} x {TEST_CASES[test_case][1]}] * '
+              f'[{TEST_CASES[test_case][1]} x {TEST_CASES[test_case][0]}]'
+              )
         for res in group:
-            print(f'- Test Case №{res.test_case} '
-                  f'[{TEST_CASES[res.test_case][0]} x {TEST_CASES[res.test_case][1]}] * '
-                  f'[{TEST_CASES[res.test_case][1]} x {TEST_CASES[res.test_case][0]}]: '
-                  f'{res.execution_time_sec} sec')
+            print(f'- {mode_descriptions[res.mode]}: {res.execution_time_sec} сек')
 
     plt.savefig('task_1_report.png', format='png', dpi=200)
 
