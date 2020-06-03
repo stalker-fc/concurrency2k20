@@ -11,8 +11,8 @@ EXECUTABLE_FILE = Path(__file__).parent.parent / 'build' / 'main'
 
 TEST_CASES = {
     0: 1000,
-    1: 100000,
-    2: 1000000,
+    # 1: 100000,
+    # 2: 1000000,
 }
 MODES = [1, ]
 
@@ -25,7 +25,7 @@ class BenchmarkResult:
 
 
 def generate_random_array(length: int, path_to_save: str):
-    array = np.random.randint(low=-length, high=length, size=length)
+    array = np.random.randint(low=0, high=length, size=length)
     with open(path_to_save, 'w') as out:
         out.write(' '.join(map(str, array)))
 

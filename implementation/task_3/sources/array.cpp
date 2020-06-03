@@ -33,7 +33,6 @@ Array get_array(char *filename) {
     while (!input.eof()) {
         input >> buffer[current_buffer_length];
         if (current_buffer_length == BUFFER_SIZE) {
-            current_buffer_length = 0;
             if (data) {
                 data = (int *) realloc(data, sizeof(int) * total_array_length);
                 std::memcpy(&data[total_array_length - current_buffer_length], buffer, sizeof(int) * BUFFER_SIZE);
@@ -41,6 +40,7 @@ Array get_array(char *filename) {
                 data = (int *) malloc(sizeof(int) * BUFFER_SIZE);
                 std::memcpy(data, buffer, sizeof(int) * BUFFER_SIZE);
             }
+            current_buffer_length = 0;
         } else {
             current_buffer_length++;
             total_array_length++;
