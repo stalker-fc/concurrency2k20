@@ -1,5 +1,5 @@
-#ifndef MULTIPLICATION_JACOBI_H
-#define MULTIPLICATION_JACOBI_H
+#ifndef LINEAR_EQUATIONS_JACOBI_H
+#define LINEAR_EQUATIONS_JACOBI_H
 
 
 struct Matrix {
@@ -35,4 +35,4 @@ Vector solve_system_of_linear_equations_mpi(Matrix data_matrix, Vector data_vect
 
 void init_MPI(int argc, char *argv[]);
 
-#endif //MULTIPLICATION_JACOBI_H
+#endif //LINEAR_EQUATIONS_JACOBI_H
