@@ -1,21 +1,13 @@
+#include "mpi.h"
 #include <chrono>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
 #include <cstdlib>
 #include <fstream>
+#include "jacobi.h"
 
 
-struct Matrix {
-    int n_columns;
-    int n_rows;
-    double *data;
-};
-
-struct Vector {
-    int len;
-    double *data;
-};
 
 
 Matrix get_matrix(char* filename) {
@@ -257,27 +249,154 @@ Vector solve_system_of_linear_equations(Matrix data_matrix, Vector data_vector, 
 	return x;
 }
 
+Vector solve_system_of_linear_equations_mpi(Matrix data_matrix, Vector data_vector, double eps) {
+    int N_ROWS = data_matrix.n_rows;
+    int N_COLUMNS = data_matrix.n_columns;
+    int local_N_ROWS = data_vector.len / procs_num;
 
-int main(int argc, char *argv[]) {
-    if (argc < 3) {
-        std::cerr << "Usage: " << argv[0] << " " << "path_to_matrix path_to_vector" << std::endl;
-        std::exit(1);
+    // declare data for main process
+    double *x_data = new double[N_ROWS];
+    double *B_data;
+    double *g_data;
+
+    // declare data for child processes
+    double *proc_B_data = new double[N_COLUMNS * local_N_ROWS];
+    double *proc_g_data = new double[local_N_ROWS];
+    double *proc_x_data = new double[local_N_ROWS];
+
+    if (procs_rank == 0) {
+        double *A_data = new double[N_COLUMNS * N_ROWS];
+        double *D_data = new double[N_COLUMNS * N_ROWS];
+        double *invD_data = new double[N_COLUMNS * N_ROWS];
+
+        for (std::size_t i = 0; i < N_COLUMNS * N_ROWS; ++i) {
+            A_data[i] = data_matrix.data[i];
+            D_data[i] = 0.0;
+            invD_data[i] = 0.0;
+        }
+
+        double *b_data = new double[N_ROWS];
+        x_data = new double[N_ROWS];
+        for (std::size_t i = 0; i < N_ROWS; ++i) {
+            b_data[i] = data_vector.data[i];
+            x_data[i] = 0.0;
+        }
+
+        for (std::size_t i = 0; i < N_COLUMNS; ++i)	{
+            D_data[i * N_COLUMNS + i] = A_data[i * N_COLUMNS + i];
+            invD_data[i * N_COLUMNS + i] = 1.0 / A_data[i * N_COLUMNS + i];
+        }
+
+        Matrix A;
+        A.n_columns = N_COLUMNS;
+        A.n_rows = N_ROWS;
+        A.data = A_data;
+
+        Matrix D;
+        D.n_columns = N_COLUMNS;
+        D.n_rows = N_ROWS;
+        D.data = D_data;
+
+        Matrix invD;
+        invD.n_columns = N_COLUMNS;
+        invD.n_rows = N_ROWS;
+        invD.data = invD_data;
+
+        Vector b;
+        b.len = N_ROWS;
+        b.data = b_data;
+
+        struct Matrix substraction = substract_matrix_from_matrix(D, A);
+        struct Matrix B = multiplicate_matrix_by_matrix(invD, substraction);
+        struct Vector g = multiplicate_matrix_by_vector(invD, b);
+        B_data = B.data;
+        g_data = g.data;
+
+        if (A.data) {
+            delete[] A.data;
+        }
+        if (D.data) {
+            delete[] D.data;
+        }
+        if (invD.data) {
+            delete[] invD.data;
+        }
+        if (b.data) {
+            delete[] b.data;
+        }
+        if (substraction.data) {
+            delete[] substraction.data;
+        }
     }
-    Matrix A;
-    Vector b;
-    A = get_matrix(argv[1]);
-    b = get_vector(argv[2]);
 
-    auto start_time = std::chrono::steady_clock::now();
-    struct Vector solution = solve_system_of_linear_equations(A, b, 1e-12);
-    auto end_time = std::chrono::steady_clock::now();
-    std::cout << std::chrono::duration_cast<std::chrono::milliseconds>(end_time - start_time).count() << " ms" << std::endl;
 
-    bool is_correct = is_result_correct(A, b, solution, 1e-10);
-    if (!is_correct) {
-        std::cerr << "Solution hasn`t enough accuracy." << std::endl;
+    MPI_Bcast(x_data, N_ROWS, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Scatter(B_data, N_COLUMNS * local_N_ROWS, MPI_DOUBLE, proc_B_data, N_COLUMNS * local_N_ROWS, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+    MPI_Scatter(g_data, local_N_ROWS, MPI_DOUBLE, proc_g_data, local_N_ROWS, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+
+    double t_start = MPI_Wtime();
+    double max_delta;
+    double dot;
+    do{
+        for (std::size_t i = 0; i < local_N_ROWS; i++)
+        {
+            dot = 0.0;
+            for (std::size_t j = 0; j < N_COLUMNS; j++)
+                dot += proc_B_data[i * N_COLUMNS + j] * x_data[j];
+            proc_x_data[i] = dot + proc_g_data[i];
+        }
+        //if(procs_rank == 0) 	printf("%f\n", pProcX[2] );
+
+        double delta = 0.0;
+        for (std::size_t i = 0; i < local_N_ROWS; i++)
+            delta += (proc_x_data[i] - x_data[procs_rank * local_N_ROWS + i]) *
+                     (proc_x_data[i] - x_data[procs_rank * local_N_ROWS + i]);
+        delta = sqrt(delta);
+        max_delta = 0.0;
+
+        MPI_Allgather(proc_x_data, local_N_ROWS, MPI_DOUBLE, x_data, local_N_ROWS, MPI_DOUBLE, MPI_COMM_WORLD);
+        MPI_Reduce(&delta, &max_delta, 1, MPI_DOUBLE, MPI_MAX, 0, MPI_COMM_WORLD);
+        MPI_Bcast(&max_delta, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        if (max_delta == std::numeric_limits<double>::infinity()) {
+            std::cerr << "Incorrect input data. System of linear equations can`t be solved." << std::endl;
+            exit(1);
+        }
+    } while (max_delta > eps);
+
+
+    if (proc_B_data) {
+        delete[] proc_B_data;
+    }
+    if (proc_g_data) {
+        delete[] proc_g_data;
+    }
+    if (proc_x_data) {
+        delete[] proc_x_data;
     }
 
+    if (procs_rank == 0) {
+        if (g_data) {
+            delete[] g_data;
+        }
+        if (B_data) {
+            delete[] B_data;
+        }
+    }
 
-    return 0;
+    Vector x;
+    x.len = data_vector.len;
+    x.data = x_data;
+
+    return x;
+}
+
+void init_MPI(int argc, char *argv[]) {
+    int namelen;
+    char processor_name[MPI_MAX_PROCESSOR_NAME];
+    MPI_Status Status;
+
+    MPI_Init(&argc, &argv);
+    MPI_Comm_size(MPI_COMM_WORLD, &procs_num);
+    MPI_Comm_rank(MPI_COMM_WORLD, &procs_rank);
+    MPI_Get_processor_name(processor_name, &namelen);
 }
