@@ -6,7 +6,9 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 from dataclasses import dataclass
+from scipy import sparse
 from scipy import spatial
+from scipy.sparse import csgraph
 
 CLASSPATH = Path(__file__).parent.parent / 'build'
 EXECUTABLE_FILE = 'Main'
@@ -18,8 +20,10 @@ TEST_CASES = {
 }
 MODES = [1, 2]
 
-GRAPH_PATH = 'graph.txt'
+GRAPH_DATA_PATH = 'graph.txt'
 LEFT, BOTTOM, RIGHT, TOP = 0, 0, 100_000, 100_000
+SOURCE_NODE = 0
+DESTINATION_NODE = 1
 
 
 @dataclass
@@ -30,7 +34,10 @@ class BenchmarkResult:
 
 
 def generate_graph(n_vertices: int, path_to_save: str):
+    source = np.array((LEFT, BOTTOM))
+    destination = np.array((RIGHT, TOP))
     points = np.random.rand(n_vertices, 2)
+    points = np.vstack((source, destination, points))
     deltas = np.array([RIGHT - LEFT, TOP - BOTTOM])
     points = points * deltas + np.array([LEFT, BOTTOM])
     points = points.astype(float)
@@ -50,10 +57,11 @@ def generate_graph(n_vertices: int, path_to_save: str):
 def benchmark():
     benchmark_results = []
     for test_case, length in TEST_CASES.items():
-        generate_graph(length, GRAPH_PATH)
+        generate_graph(length, GRAPH_DATA_PATH)
         for mode in MODES:
             st = time.time()
-            exit_code = subprocess.call(['java', '-classpath', CLASSPATH, EXECUTABLE_FILE])
+            exit_code = subprocess.call(['java', '-classpath', CLASSPATH, EXECUTABLE_FILE, mode,
+                                         GRAPH_DATA_PATH, SOURCE_NODE, DESTINATION_NODE])
             if exit_code != 0:
                 print(f'Error in benchmarking. Test Case `{test_case}`, mode `{mode}`')
             execution_time_sec = time.time() - st
