@@ -1,6 +1,7 @@
 #include <iostream>
 #include "array.h"
 #include "quicksort.h"
+#include "quicksort_mpi.h"
 
 
 int main(int argc, char *argv[]) {
@@ -19,10 +20,9 @@ int main(int argc, char *argv[]) {
         quicksort(array.data, 0, array.length - 1);
         is_correct = is_result_correct(array);
     } else if (mode == 2) {
-//        init_MPI(argc, argv);
-//        int* sorted_array = quicksort_mpi(A, b, 1e-12);
-//        solution.len = data.len;
-//        solution.data = data.data;
+        init_MPI(argc, argv);
+        quicksort_mpi(array.data, 0, array.length - 1);
+        is_correct = is_result_correct(array);
     } else {
         std::cerr << "Incorrect mode value. It must be 1 or 2." << std::endl;
         std::exit(1);

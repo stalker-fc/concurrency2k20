@@ -11,10 +11,10 @@ EXECUTABLE_FILE = Path(__file__).parent.parent / 'build' / 'main'
 
 TEST_CASES = {
     0: 1000,
-    # 1: 100000,
+    1: 10000,
     # 2: 1000000,
 }
-MODES = [1, ]
+MODES = [1, 2]
 
 
 @dataclass
