@@ -16,6 +16,9 @@ TEST_CASES = {
 }
 MODES = [1, 2]
 
+MATRIX_PATH = 'A.txt'
+VECTOR_PATH = 'b.txt'
+
 
 @dataclass
 class BenchmarkResult:
@@ -45,12 +48,15 @@ def generate_random_vector(length: int, path_to_save: str):
 
 def benchmark():
     benchmark_results = []
+
     for test_case, (n_rows, n_columns, length) in TEST_CASES.items():
-        generate_random_matrix(n_rows, n_columns, 'A.txt')
-        generate_random_vector(length, 'b.txt')
+        generate_random_matrix(n_rows, n_columns, MATRIX_PATH)
+        generate_random_vector(length, VECTOR_PATH)
         for mode in MODES:
             st = time.time()
-            subprocess.call([EXECUTABLE_FILE, 'A.txt', 'b.txt', str(mode)])
+            exit_code = subprocess.call([EXECUTABLE_FILE, MATRIX_PATH, VECTOR_PATH, str(mode)])
+            if exit_code != 0:
+                print(f'Error in benchmarking. Test Case `{test_case}`, mode `{mode}`')
             execution_time_sec = time.time() - st
             benchmark_results.append(BenchmarkResult(
                 test_case,

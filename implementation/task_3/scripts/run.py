@@ -14,7 +14,9 @@ TEST_CASES = {
     1: 10000,
     # 2: 1000000,
 }
-MODES = [1, 2]
+MODES = [1, 2, 3]
+
+ARRAY_PATH = 'array.txt'
 
 
 @dataclass
@@ -33,10 +35,12 @@ def generate_random_array(length: int, path_to_save: str):
 def benchmark():
     benchmark_results = []
     for test_case, length in TEST_CASES.items():
-        generate_random_array(length, 'array.txt')
+        generate_random_array(length, ARRAY_PATH)
         for mode in MODES:
             st = time.time()
-            subprocess.call([EXECUTABLE_FILE, 'array.txt', str(mode)])
+            exit_code = subprocess.call([EXECUTABLE_FILE, ARRAY_PATH, str(mode)])
+            if exit_code != 0:
+                print(f'Error in benchmarking. Test Case `{test_case}`, mode `{mode}`')
             execution_time_sec = time.time() - st
             benchmark_results.append(BenchmarkResult(
                 test_case,
