@@ -14,7 +14,7 @@ public class Graph {
         }
         for (var edge : edges) {
             var neighboursU = nodeNeighbours.get(edge.u);
-            var neighboursV = nodeNeighbours.get(edge.u);
+            var neighboursV = nodeNeighbours.get(edge.v);
             if (neighboursU == null) {
                 var neighbours = new HashSet<Integer>();
                 neighbours.add(edge.v);
@@ -24,8 +24,8 @@ public class Graph {
             }
             if (neighboursV == null) {
                 var neighbours = new HashSet<Integer>();
-                neighbours.add(edge.v);
-                nodeNeighbours.put(edge.u, neighbours);
+                neighbours.add(edge.u);
+                nodeNeighbours.put(edge.v, neighbours);
             } else {
                 neighboursV.add(edge.v);
             }
@@ -33,7 +33,7 @@ public class Graph {
     }
 
     public Set<Integer> getAdjacentNodes(Integer node) {
-        return nodeNeighbours.getOrDefault(node, new HashSet<>());
+        return nodeNeighbours.get(node);
     }
 
     public Double getWeightOfEdge(Integer source, Integer target) {

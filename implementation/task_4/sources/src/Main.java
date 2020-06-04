@@ -12,6 +12,5 @@ public class Main {
         var graph = new Graph(edges);
         var djikstra = new DjikstraPathFinder();
         var path = djikstra.getShortestPath(graph, 0, 1);
-        System.out.println("Hello world!");
     }
 }

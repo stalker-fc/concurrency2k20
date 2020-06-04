@@ -37,7 +37,6 @@ public class DjikstraPathFinder {
         while (unvisitedNodes.size() > 0) {
             var node = unvisitedNodes.poll();
             visitedNodes.add(node);
-            unvisitedNodes.remove(node);
             findDistancesFromSource(node);
         }
     }
