@@ -27,10 +27,10 @@ public class Main {
         List<Edge> edges = GraphFileParser.getEdgesFromFile(path_to_graph_data);
         var graph = new Graph(edges);
         List<Integer> path = null;
-        if (mode == 0) {
+        if (mode.equals(1)) {
             var djikstra = new DjikstraPathFinder();
             path = djikstra.getShortestPath(graph, source, destination);
-        } else if (mode == 1) {
+        } else if (mode.equals(2)) {
             System.out.println("Nothing to do here");
         } else {
             System.err.println("Incorrect `mode` value. It must be `1` for sequential or `2` for concurrent");

@@ -6,19 +6,17 @@ from typing import List
 import matplotlib.pyplot as plt
 import numpy as np
 from dataclasses import dataclass
-from scipy import sparse
 from scipy import spatial
-from scipy.sparse import csgraph
 
 CLASSPATH = Path(__file__).parent.parent / 'build'
 EXECUTABLE_FILE = 'Main'
 
 TEST_CASES = {
-    0: 30,
-    # 1: 10000,
-    # 2: 1000000,
+    0: 10000,
+    1: 100000,
+    2: 500000,
 }
-MODES = [1, 2]
+MODES = [1, ]
 
 GRAPH_DATA_PATH = 'graph.txt'
 LEFT, BOTTOM, RIGHT, TOP = 0, 0, 100_000, 100_000
@@ -34,15 +32,15 @@ class BenchmarkResult:
 
 
 def generate_graph(n_vertices: int, path_to_save: str):
-    source = np.array((LEFT, BOTTOM))
-    destination = np.array((RIGHT, TOP))
+    source = np.array((0, 0))
+    destination = np.array((1, 1))
     points = np.random.rand(n_vertices, 2)
     points = np.vstack((source, destination, points))
     deltas = np.array([RIGHT - LEFT, TOP - BOTTOM])
     points = points * deltas + np.array([LEFT, BOTTOM])
     points = points.astype(float)
 
-    mesh = spatial.Delaunay(points - points.mean(axis=0), incremental=True)
+    mesh = spatial.Delaunay(points, incremental=True)
     edges = np.vstack([np.array([(a, b), (b, c), (c, a)]) for (a, b, c) in mesh.simplices])
     edges.sort(axis=1)
     edges = np.unique(edges, axis=0)
@@ -60,8 +58,8 @@ def benchmark():
         generate_graph(length, GRAPH_DATA_PATH)
         for mode in MODES:
             st = time.time()
-            exit_code = subprocess.call(['java', '-classpath', CLASSPATH, EXECUTABLE_FILE, mode,
-                                         GRAPH_DATA_PATH, SOURCE_NODE, DESTINATION_NODE])
+            exit_code = subprocess.call(['java', '-classpath', str(CLASSPATH), EXECUTABLE_FILE, str(mode),
+                                         GRAPH_DATA_PATH, str(SOURCE_NODE), str(DESTINATION_NODE)])
             if exit_code != 0:
                 print(f'Error in benchmarking. Test Case `{test_case}`, mode `{mode}`')
             execution_time_sec = time.time() - st
