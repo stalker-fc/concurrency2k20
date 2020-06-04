@@ -6,7 +6,7 @@ install:
 
 build:
 	mkdir -p build
-	cd build &&	cmake ../sources &&	make
+	javac -d build -sourcepath sources/src sources/src/*.java
 
 run: install build
 	source task_4_venv/bin/activate && python3 scripts/run.py

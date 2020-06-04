@@ -8,7 +8,8 @@ import numpy as np
 from dataclasses import dataclass
 from scipy import spatial
 
-EXECUTABLE_FILE = Path(__file__).parent.parent / 'build' / 'main'
+CLASSPATH = Path(__file__).parent.parent / 'build'
+EXECUTABLE_FILE = 'Main'
 
 TEST_CASES = {
     0: 30,
@@ -52,7 +53,7 @@ def benchmark():
         generate_graph(length, GRAPH_PATH)
         for mode in MODES:
             st = time.time()
-            exit_code = subprocess.call([EXECUTABLE_FILE, GRAPH_PATH, str(mode)])
+            exit_code = subprocess.call(['java', '-classpath', CLASSPATH, EXECUTABLE_FILE])
             if exit_code != 0:
                 print(f'Error in benchmarking. Test Case `{test_case}`, mode `{mode}`')
             execution_time_sec = time.time() - st
