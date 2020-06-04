@@ -19,7 +19,6 @@ MODES = [1, 2]
 
 GRAPH_PATH = 'graph.txt'
 LEFT, BOTTOM, RIGHT, TOP = 0, 0, 100_000, 100_000
-N_NEAREST_NEIGHBOURS = 5
 
 
 @dataclass
@@ -35,16 +34,13 @@ def generate_graph(n_vertices: int, path_to_save: str):
     points = points * deltas + np.array([LEFT, BOTTOM])
     points = points.astype(float)
 
-    kdtree = spatial.cKDTree(data=points)
-    inds = kdtree.query(points, k=N_NEAREST_NEIGHBOURS + 1)[1][:, 1:]
-    points_indices = np.arange(points.shape[0]).reshape(-1, 1)
-    pair_indices = np.stack([np.repeat(
-        points_indices,
-        N_NEAREST_NEIGHBOURS, axis=-1), inds], axis=-1).reshape(-1, 2)
-    pair_indices.sort(axis=1)
-    pair_indices = np.unique(pair_indices, axis=0)
-    edges = pair_indices.tolist()
-    weights = np.linalg.norm(points[pair_indices[:, 0]] - points[pair_indices[:, 1]], axis=1).tolist()
+    mesh = spatial.Delaunay(points - points.mean(axis=0), incremental=True)
+    edges = np.vstack([np.array([(a, b), (b, c), (c, a)]) for (a, b, c) in mesh.simplices])
+    edges.sort(axis=1)
+    edges = np.unique(edges, axis=0)
+
+    weights = np.linalg.norm(points[edges[:, 0]] - points[edges[:, 1]], axis=1).tolist()
+    edges = edges.tolist()
     with open(path_to_save, 'w') as out:
         out.write(f'{len(edges)}\n')
         for (u, v), weight in zip(edges, weights):
@@ -117,7 +113,7 @@ def plot_results(benchmark_results: List[BenchmarkResult]):
     for test_case, group in groupped_by_test_cases_benchmark_result.items():
         group = list(sorted(group, key=lambda x: x.mode))
         print(f'\n### Test Case {test_case} '
-              f'{TEST_CASES[test_case]} вершин, {TEST_CASES[test_case] * N_NEAREST_NEIGHBOURS} рёбер'
+              f'{TEST_CASES[test_case]} вершин, {3 * TEST_CASES[test_case] - 6} рёбер'
               )
         for res in group:
             print(f'- {mode_descriptions[res.mode]}: {res.execution_time_sec} сек')
