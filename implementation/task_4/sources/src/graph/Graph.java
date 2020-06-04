@@ -6,7 +6,7 @@ import java.io.IOException;
 import java.util.List;
 
 public class Graph {
-    public List<Edge> edges;
+    private List<Edge> edges;
 
     public Graph(List<Edge> edges) {
         this.edges = edges;

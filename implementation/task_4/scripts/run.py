@@ -42,7 +42,6 @@ def generate_graph(n_vertices: int, path_to_save: str):
     weights = np.linalg.norm(points[edges[:, 0]] - points[edges[:, 1]], axis=1).tolist()
     edges = edges.tolist()
     with open(path_to_save, 'w') as out:
-        out.write(f'{len(edges)}\n')
         for (u, v), weight in zip(edges, weights):
             out.write(f'{u} {v} {weight}\n')
 
