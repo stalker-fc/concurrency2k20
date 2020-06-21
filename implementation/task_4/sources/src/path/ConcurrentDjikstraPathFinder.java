@@ -11,7 +11,7 @@ public class ConcurrentDjikstraPathFinder extends DjikstraPathFinder {
         ArrayList<Thread> threads = new ArrayList<>();
 
         for (var neighbour : adjacentNodes) {
-            var thread = new Thread(new ConcurrentWorker(neighbour, node));
+            var thread = new Thread(new ConcurrentWorker(node, neighbour));
             threads.add(thread);
             thread.start();
         }
