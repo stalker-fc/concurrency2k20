@@ -1,6 +1,7 @@
 import graph.Edge;
 import graph.Graph;
 import graph.GraphFileParser;
+import path.ConcurrentDjikstraPathFinder;
 import path.DjikstraPathFinder;
 
 import java.io.IOException;
@@ -31,7 +32,8 @@ public class Main {
             var djikstra = new DjikstraPathFinder();
             path = djikstra.getShortestPath(graph, source, destination);
         } else if (mode.equals(2)) {
-            System.out.println("Nothing to do here");
+            var concurrentDjikstra = new ConcurrentDjikstraPathFinder();
+            path = concurrentDjikstra.getShortestPath(graph, source, destination);
         } else {
             System.err.println("Incorrect `mode` value. It must be `1` for sequential or `2` for concurrent");
             System.exit(1);

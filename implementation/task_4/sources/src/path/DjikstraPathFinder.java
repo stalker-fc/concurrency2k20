@@ -5,14 +5,14 @@ import graph.Graph;
 import java.util.*;
 
 public class DjikstraPathFinder {
-    private Graph graph;
-    private Integer source;
-    private Integer destination;
+    protected Graph graph;
+    protected Integer source;
+    protected Integer destination;
 
-    private Set<Integer> visitedNodes;
-    private Queue<Integer> unvisitedNodes;
-    private Map<Integer, Integer> predecessors;
-    private Map<Integer, Double> distances;
+    protected Set<Integer> visitedNodes;
+    protected Queue<Integer> unvisitedNodes;
+    protected Map<Integer, Integer> predecessors;
+    protected Map<Integer, Double> distances;
 
     public List<Integer> getShortestPath(Graph graph, Integer source, Integer destination) {
         init(graph, source, destination);
@@ -20,7 +20,7 @@ public class DjikstraPathFinder {
         return retrievePath();
     }
 
-    private void init(Graph graph, Integer source, Integer destination) {
+    protected void init(Graph graph, Integer source, Integer destination) {
         this.graph = graph;
         this.source = source;
         this.destination = destination;
@@ -33,7 +33,7 @@ public class DjikstraPathFinder {
         distances.put(this.source, 0.0);
     }
 
-    private void findPath() {
+    protected void findPath() {
         while (unvisitedNodes.size() > 0) {
             var node = unvisitedNodes.poll();
             visitedNodes.add(node);
@@ -41,7 +41,7 @@ public class DjikstraPathFinder {
         }
     }
 
-    private void findDistancesFromSource(Integer node) {
+    protected void findDistancesFromSource(Integer node) {
         Set<Integer> adjacentNodes = graph.getAdjacentNodes(node);
         for (var neighbour : adjacentNodes) {
             if (visitedNodes.contains(neighbour)) {
@@ -58,8 +58,7 @@ public class DjikstraPathFinder {
         }
     }
 
-
-    private List<Integer> retrievePath() {
+    protected List<Integer> retrievePath() {
         List<Integer> shortestPath = new LinkedList<Integer>();
         Integer step = destination;
         // check if a path exists
