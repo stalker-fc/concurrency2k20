@@ -12,12 +12,13 @@ EXECUTABLE_FILE = Path(__file__).parent.parent / 'build' / 'main'
 TEST_CASES = {
     0: 1000,
     1: 10000,
-    # 2: 1000000,
+    2: 100000,
+    3: 1000000,
 }
-MODES = [1, 2, 3]
+MODES = [1, 2]
 
 ARRAY_PATH = 'array.txt'
-
+NUM_OF_PROCESSES = 2
 
 @dataclass
 class BenchmarkResult:
@@ -38,7 +39,8 @@ def benchmark():
         generate_random_array(length, ARRAY_PATH)
         for mode in MODES:
             st = time.time()
-            exit_code = subprocess.call([EXECUTABLE_FILE, ARRAY_PATH, str(mode)])
+            exit_code = subprocess.call(["mpiexec", "-n", str(NUM_OF_PROCESSES),
+            EXECUTABLE_FILE, ARRAY_PATH, str(mode)])
             if exit_code != 0:
                 print(f'Error in benchmarking. Test Case `{test_case}`, mode `{mode}`')
             execution_time_sec = time.time() - st

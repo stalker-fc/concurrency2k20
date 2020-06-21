@@ -19,6 +19,7 @@ MODES = [1, 2]
 MATRIX_PATH = 'A.txt'
 VECTOR_PATH = 'b.txt'
 
+NUM_OF_PROCESSES = 2
 
 @dataclass
 class BenchmarkResult:
@@ -54,7 +55,8 @@ def benchmark():
         generate_random_vector(length, VECTOR_PATH)
         for mode in MODES:
             st = time.time()
-            exit_code = subprocess.call([EXECUTABLE_FILE, MATRIX_PATH, VECTOR_PATH, str(mode)])
+            exit_code = subprocess.call(["mpiexec", "-n", str(NUM_OF_PROCESSES),
+             EXECUTABLE_FILE, MATRIX_PATH, VECTOR_PATH, str(mode)])
             if exit_code != 0:
                 print(f'Error in benchmarking. Test Case `{test_case}`, mode `{mode}`')
             execution_time_sec = time.time() - st
