@@ -10,18 +10,21 @@ import numpy as np
 EXECUTABLE_FILE = Path(__file__).parent.parent / 'build' / 'main'
 
 TEST_CASES = {
-    0: (100, 100),
-    1: (250, 250),
-    2: (500, 500),
-    3: (1000, 1000),
-    4: (200, 300),
-    5: (600, 800),
-    6: (1, 1000),
-    7: (1, 10000),
+    0: (5, 5),
+    # 1: (250, 250),
+    # 2: (500, 500),
+    # 3: (1000, 1000),
+    # 4: (200, 300),
+    # 5: (600, 800),
+    # 6: (1, 1000),
+    # 7: (1, 10000),
 }
 MODES = {
-    1: "последовательное умножение матриц",
-    2: "умножение матриц с использованием OpenMP"
+    1: "get_sequential_result",
+    # 2: "get_parallel_for_result",
+    # 3: "get_static_schedule_result",
+    # 4: "get_dynamic_schedule_result",
+    # 5: "get_guided_schedule_result",
 }
 
 MODE_COLORS = {

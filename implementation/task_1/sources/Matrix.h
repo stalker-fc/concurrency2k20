@@ -9,13 +9,15 @@ public:
 
     Matrix();
 
-    Matrix(const Matrix& matrix);
+    Matrix(const Matrix &matrix);
 
     Matrix(int n_rows, int n_columns);
 
     Matrix(int n_rows, int n_columns, double *input_data);
 
     Matrix(char *filename);
+
+    ~Matrix();
 
     void print();
 };

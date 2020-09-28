@@ -12,10 +12,11 @@ Matrix::Matrix() {
     n_columns = 0;
 }
 
-
 Matrix::Matrix(const Matrix &matrix) : n_rows(matrix.n_rows), n_columns(matrix.n_columns) {
     data = new double[n_rows * n_columns];
-    memcpy(&data, &matrix.data, n_rows * n_columns);
+    for (int i = 0; i < n_rows * n_columns; i++) {
+        data[i] = matrix.data[i];
+    }
 }
 
 Matrix::Matrix(int n_rows, int n_columns) : n_rows(n_rows), n_columns(n_columns) {
@@ -24,7 +25,7 @@ Matrix::Matrix(int n_rows, int n_columns) : n_rows(n_rows), n_columns(n_columns)
 
 Matrix::Matrix(int n_rows, int n_columns, double *input_data) : n_rows(n_rows), n_columns(n_columns) {
     data = new double[n_rows * n_columns];
-    memcpy(&data, input_data, n_rows * n_columns);
+    std::memcpy(&data, input_data, n_rows * n_columns * sizeof(double));
 }
 
 Matrix::Matrix(char *filename) {
@@ -34,15 +35,18 @@ Matrix::Matrix(char *filename) {
         std::cout << "Unable to open file";
         std::exit(1);
     }
-    int n_columns;
-    int n_rows;
     input >> n_columns;
     input >> n_rows;
 
-    double *data = new double[n_columns * n_rows];
+    data = new double[n_columns * n_rows];
     for (std::size_t i = 0; i < n_columns * n_rows; ++i)
         input >> data[i];
     input.close();
+}
+
+Matrix::~Matrix() {
+    if (data)
+        delete[] data;
 }
 
 void Matrix::print() {

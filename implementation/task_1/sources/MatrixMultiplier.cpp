@@ -1,3 +1,4 @@
+#include <iostream>
 #include "Matrix.h"
 #include "MatrixMultiplier.h"
 
@@ -19,7 +20,8 @@ Matrix MatrixMultiplier::get_sequential_result() {
         }
     }
 
-    return Matrix(n_rows, n_columns, data);
+    Matrix result = Matrix(n_rows, n_columns, data);
+    return result;
 }
 
 
@@ -28,8 +30,7 @@ Matrix MatrixMultiplier::get_parallel_for_result() {
 
 #pragma omp parallel
     {
-        int row_idx, column_idx, k;
-        double dot = 0.0;
+        int row_idx, column_idx;
 #pragma omp for
         for (row_idx = 0; row_idx < n_rows; ++row_idx) {
             for (column_idx = 0; column_idx < n_columns; ++column_idx) {
@@ -38,7 +39,9 @@ Matrix MatrixMultiplier::get_parallel_for_result() {
         }
     }
 
-    return Matrix(n_rows, n_columns, data);
+    Matrix result = Matrix(n_rows, n_columns, data);
+    delete[] data;
+    return result;
 }
 
 
@@ -53,7 +56,9 @@ Matrix MatrixMultiplier::get_static_schedule_result() {
         data[row_idx * n_columns + column_idx] = calculate_cell_value(row_idx, column_idx);
     }
 
-    return Matrix(n_rows, n_columns, data);
+    Matrix result = Matrix(n_rows, n_columns, data);
+    delete[] data;
+    return result;
 }
 
 
@@ -68,7 +73,9 @@ Matrix MatrixMultiplier::get_dynamic_schedule_result() {
         data[row_idx * n_columns + column_idx] = calculate_cell_value(row_idx, column_idx);
     }
 
-    return Matrix(n_rows, n_columns, data);
+    Matrix result = Matrix(n_rows, n_columns, data);
+    delete[] data;
+    return result;
 }
 
 
@@ -83,5 +90,7 @@ Matrix MatrixMultiplier::get_guided_schedule_result() {
         data[row_idx * n_columns + column_idx] = calculate_cell_value(row_idx, column_idx);
     }
 
-    return Matrix(n_rows, n_columns, data);
+    Matrix result = Matrix(n_rows, n_columns, data);
+    delete[] data;
+    return result;
 }
