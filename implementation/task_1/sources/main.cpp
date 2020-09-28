@@ -1,30 +1,46 @@
 #include <iostream>
-#include "matrix.h"
+#include "Matrix.h"
+#include "MatrixMultiplier.h"
 
 
 int main(int argc, char *argv[]) {
     if (argc < 4) {
         std::cerr << "Usage: " << argv[0] << " "
                   << "`path/to/first/matrix.txt` `path/to/second/matrix.txt` "
-                  << "mode: [`1` for sequential multiplication, `2` for openmp multiplication]"
-                  << std::endl;
+                  << "modes:" << std::endl
+                  << "`1` sequential multiplication" << std::endl
+                  << "`2` parallel for multiplication" << std::endl
+                  << "`3` parallel for static scheduled multiplication" << std::endl
+                  << "`4` parallel for dynamic scheduled multiplication" << std::endl
+                  << "`5` parallel for guided scheduled multiplication" << std::endl;
         std::exit(1);
     }
-    Matrix A;
-    Matrix B;
-    A = get_matrix_from_file(argv[1]);
-    B = get_matrix_from_file(argv[2]);
 
-    int mode = atoi(argv[3]);
+    Matrix A = Matrix(argv[1]);
+    Matrix B = Matrix(argv[2]);
 
+    MatrixMultiplier matrix_multiplier = MatrixMultiplier(A, B);
     Matrix result;
-    if (mode == 1) {
-        result = multiplication(A, B);
-    } else if (mode == 2) {
-        result = multiplication_openmp(A, B);
-    } else {
-        std::cerr << "Incorrect mode value. It must be 1 or 2." << std::endl;
-        std::exit(1);
+    int mode = atoi(argv[3]);
+    switch (mode) {
+        case 1:
+            result = matrix_multiplier.get_sequential_result();
+            break;
+        case 2:
+            result = matrix_multiplier.get_parallel_for_result();
+            break;
+        case 3:
+            result = matrix_multiplier.get_static_schedule_result();
+            break;
+        case 4:
+            result = matrix_multiplier.get_dynamic_schedule_result();
+            break;
+        case 5:
+            result = matrix_multiplier.get_guided_schedule_result();
+            break;
+        default:
+            std::cerr << "Incorrect mode value. It must be [1, 2, 3, 4, 5], but it was " << mode << "." << std::endl;
+            std::exit(1);
     }
     return 0;
 }
