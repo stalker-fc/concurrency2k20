@@ -1,4 +1,5 @@
 #include <iostream>
+#include "mpi.h"
 #include "jacobi.h"
 
 
@@ -10,20 +11,17 @@ int main(int argc, char *argv[]) {
                   << std::endl;
         std::exit(1);
     }
-    Matrix A;
-    Vector b;
-    A = get_matrix(argv[1]);
-    b = get_vector(argv[2]);
-
+    struct Matrix A = get_matrix(argv[1]);
+    struct Vector b = get_vector(argv[2]);
     int mode = atoi(argv[3]);
 
-    Vector solution;
+    Vector solution{};
     if (mode == 1) {
         struct Vector data = solve_system_of_linear_equations(A, b, 1e-12);
         solution.len = data.len;
         solution.data = data.data;
     } else if (mode == 2) {
-        init_MPI(argc, argv);
+        init_MPI();
         struct Vector data = solve_system_of_linear_equations_mpi(A, b, 1e-12);
         solution.len = data.len;
         solution.data = data.data;

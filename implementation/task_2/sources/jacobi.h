@@ -3,8 +3,8 @@
 
 
 struct Matrix {
-    int n_columns;
     int n_rows;
+    int n_columns;
     double *data;
 };
 
@@ -33,6 +33,6 @@ Vector solve_system_of_linear_equations(Matrix data_matrix, Vector data_vector, 
 
 Vector solve_system_of_linear_equations_mpi(Matrix data_matrix, Vector data_vector, double eps);
 
-void init_MPI(int argc, char *argv[]);
+void init_MPI();
 
 #endif //LINEAR_EQUATIONS_JACOBI_H
