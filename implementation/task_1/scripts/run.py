@@ -19,11 +19,11 @@ TEST_CASES = {
     7: (1, 10000),
 }
 MODES = {
-    1: "get_sequential_result",
-    2: "get_parallel_for_result",
-    3: "get_static_schedule_result",
-    4: "get_dynamic_schedule_result",
-    5: "get_guided_schedule_result",
+    1: "sequential",
+    2: "parallel for",
+    3: "static schedule",
+    4: "dynamic schedule",
+    5: "guided schedule",
 }
 
 MODE_COLORS = {
