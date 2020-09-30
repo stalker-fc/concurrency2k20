@@ -12,11 +12,12 @@ CLASSPATH = Path(__file__).parent.parent / 'build'
 EXECUTABLE_FILE = 'Main'
 
 TEST_CASES = {
-    0: 10000,
-    1: 100000,
-    2: 500000,
+    0: 100,
+    1: 1000,
+    2: 10000,
+    3: 100000,
 }
-MODES = [1, ]
+MODES = [1, 2]
 
 GRAPH_DATA_PATH = 'graph.txt'
 LEFT, BOTTOM, RIGHT, TOP = 0, 0, 100_000, 100_000

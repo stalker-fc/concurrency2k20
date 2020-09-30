@@ -42,7 +42,7 @@ public class DjikstraPathFinder {
     }
 
     protected void findDistancesFromSource(Integer node) {
-        Set<Integer> adjacentNodes = graph.getAdjacentNodes(node);
+        var adjacentNodes = graph.getAdjacentNodes(node);
         for (var neighbour : adjacentNodes) {
             if (visitedNodes.contains(neighbour)) {
                 continue;

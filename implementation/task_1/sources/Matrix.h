@@ -3,23 +3,19 @@
 
 class Matrix {
 public:
-    int n_rows;
-    int n_columns;
+    int n_rows{};
+    int n_columns{};
     double *data;
 
     Matrix();
 
-    Matrix(const Matrix &matrix);
-
     Matrix(int n_rows, int n_columns);
 
-    Matrix(int n_rows, int n_columns, double *input_data);
-
-    Matrix(char *filename);
+    explicit Matrix(char *filename);
 
     ~Matrix();
 
-    void print();
+    void print() const;
 };
 
 #endif //MULTIPLICATION_MATRIX_H

@@ -10,26 +10,28 @@ import numpy as np
 EXECUTABLE_FILE = Path(__file__).parent.parent / 'build' / 'main'
 
 TEST_CASES = {
-    0: (5, 5),
-    # 1: (250, 250),
-    # 2: (500, 500),
-    # 3: (1000, 1000),
-    # 4: (200, 300),
-    # 5: (600, 800),
-    # 6: (1, 1000),
-    # 7: (1, 10000),
+    1: (250, 250),
+    2: (500, 500),
+    3: (1000, 1000),
+    4: (200, 300),
+    5: (600, 800),
+    6: (1, 1000),
+    7: (1, 10000),
 }
 MODES = {
     1: "get_sequential_result",
-    # 2: "get_parallel_for_result",
-    # 3: "get_static_schedule_result",
-    # 4: "get_dynamic_schedule_result",
-    # 5: "get_guided_schedule_result",
+    2: "get_parallel_for_result",
+    3: "get_static_schedule_result",
+    4: "get_dynamic_schedule_result",
+    5: "get_guided_schedule_result",
 }
 
 MODE_COLORS = {
     1: '#FB707F',
-    2: '#008ECC'
+    2: '#008ECC',
+    3: '#6495ED',
+    4: '#D2691E',
+    5: '#FF69B4'
 }
 SERIAL_MODE = 1
 
@@ -90,14 +92,6 @@ def plot_results(benchmark_results: List[BenchmarkResult]):
 
 
 def plot_time_graphics(benchmark_results: List[BenchmarkResult]):
-    mode_colors = {
-        1: '#FB707F',
-        2: '#008ECC'
-    }
-    mode_descriptions = {
-        1: "последовательное умножение матриц",
-        2: "умножение матриц с использованием OpenMP"
-    }
     plt.figure(figsize=(4, 4))
     left, width = 0.1, 0.85
     bottom, height = 0.1, 0.85
@@ -115,7 +109,7 @@ def plot_time_graphics(benchmark_results: List[BenchmarkResult]):
     legends = []
     for mode in MODES:
         legends.append(
-            plt.Line2D((0, 1), (0, 0), color=mode_colors[mode], label=mode_descriptions[mode])
+            plt.Line2D((0, 1), (0, 0), color=MODE_COLORS[mode], label=MODES[mode])
         )
     ax.legend(handles=legends, loc='best', fontsize=6)
 
@@ -127,7 +121,7 @@ def plot_time_graphics(benchmark_results: List[BenchmarkResult]):
         group = list(sorted(group, key=lambda x: x.test_case))
         execution_times = [res.execution_time_sec for res in group]
         test_cases = [res.test_case for res in group]
-        ax.plot(test_cases, execution_times, marker='o', color=mode_colors[mode])
+        ax.plot(test_cases, execution_times, marker='o', color=MODE_COLORS[mode])
 
     plt.savefig('task_1_time_report.png', format='png', dpi=200)
 

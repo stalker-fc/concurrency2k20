@@ -32,8 +32,8 @@ public class Graph {
         }
     }
 
-    public Set<Integer> getAdjacentNodes(Integer node) {
-        return nodeNeighbours.get(node);
+    public Integer[] getAdjacentNodes(Integer node) {
+        return nodeNeighbours.get(node).toArray(Integer[]::new);
     }
 
     public Double getWeightOfEdge(Integer source, Integer target) {
