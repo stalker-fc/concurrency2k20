@@ -117,7 +117,7 @@ def plot_time_graphics(benchmark_results: List[BenchmarkResult]):
     bottom, height = 0.1, 0.85
 
     ax = plt.axes([left, bottom, width, height])
-    ax.set_title('Время выполнения разных методов умножения матриц', fontsize=7)
+    ax.set_title('Производительность методов решения СЛАУ', fontsize=7)
     ax.set_xlabel('Тестовые случаи, [количество строк]', fontsize=6)
     ax.set_ylabel('Время работы программы, сек', fontsize=6)
     ax.set_xticks(list(TEST_CASES.keys()))
