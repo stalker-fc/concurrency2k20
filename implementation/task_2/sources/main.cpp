@@ -14,7 +14,7 @@ int main(int argc, char *argv[]) {
     struct Matrix A = get_matrix(argv[1]);
     struct Vector b = get_vector(argv[2]);
     int mode = atoi(argv[3]);
-
+    MPI_Init(nullptr, nullptr);
     Vector solution{};
     if (mode == 1) {
         struct Vector data = solve_system_of_linear_equations(A, b, 1e-12);
@@ -29,8 +29,8 @@ int main(int argc, char *argv[]) {
         std::cerr << "Incorrect mode value. It must be 1 or 2." << std::endl;
         std::exit(1);
     }
-
-    bool is_correct = is_result_correct(A, b, solution, 1e-10);
+    MPI_Finalize();
+    bool is_correct = is_result_correct(A, b, solution, 1e-4);
     if (!is_correct) {
         std::cerr << "Solution hasn`t enough accuracy." << std::endl;
     }

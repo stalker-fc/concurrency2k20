@@ -122,8 +122,6 @@ bool is_result_correct(Matrix &matrix, Vector &vector, Vector &result, double ep
             res = false;
         }
     }
-    std::cout << "error = " << error << std::endl;
-
     delete[] answer.data;
     return res;
 }
@@ -216,7 +214,6 @@ Vector solve_system_of_linear_equations_mpi(Matrix A, Vector b, double eps) {
     local_data_sizes[procs_num - 1] += bonus * N_COLUMNS;
 
     auto local_N_ROWS = local_rows[procs_rank];
-    std::cout << "Procs rank: " << procs_rank << "; local_N_ROWS " << local_N_ROWS << std::endl;
 
     // declare data for main process
     double *B_data;
@@ -299,12 +296,10 @@ Vector solve_system_of_linear_equations_mpi(Matrix A, Vector b, double eps) {
     }
 
     Vector x{b.len, x_data};
-    MPI_Finalize();
     return x;
 }
 
 void init_MPI() {
-    MPI_Init(nullptr, nullptr);
     MPI_Comm_size(MPI_COMM_WORLD, &procs_num);
     MPI_Comm_rank(MPI_COMM_WORLD, &procs_rank);
 }
