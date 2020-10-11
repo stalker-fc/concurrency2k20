@@ -10,10 +10,10 @@ import numpy as np
 EXECUTABLE_FILE = Path(__file__).parent.parent / 'build' / 'main'
 
 TEST_CASES = {
-    0: 1000,
-    1: 10000,
-    2: 100000,
-    3: 1000000,
+    0: 100,
+    # 1: 10000,
+    # 2: 100000,
+    # 3: 1000000,
 }
 MODES = [1, 2]
 

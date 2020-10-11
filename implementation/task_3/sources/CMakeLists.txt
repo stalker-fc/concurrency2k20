@@ -6,7 +6,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS}")
 set(CMAKE_CXX_COMPILER /usr/bin/mpicxx)
 include_directories(/usr/include/mpi)
 
-set(SOURCES array.cpp quicksort.cpp quicksort_mpi.cpp)
+set(SOURCES array.cpp quicksort.cpp hypercube_quicksort.cpp)
 
 add_library(quicksort STATIC ${SOURCES})
 

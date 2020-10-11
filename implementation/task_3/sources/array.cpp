@@ -8,10 +8,10 @@
 
 bool is_result_correct(Array array) {
     for (std::size_t i = 1; i < array.length; ++i) {
+        std::cout << array.data[i] << " ";
         if (array.data[i] < array.data[i - 1])
             return false;
     }
-
     return true;
 }
 

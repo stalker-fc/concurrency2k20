@@ -7,33 +7,29 @@
 #include "quicksort.h"
 
 
-int get_partition(int* array, int left_index, int right_index) {
-    int pivot = array[left_index];
-    int i = left_index - 1;
-    int j = right_index + 1;
+int partition(int *array, int left_index, int right_index) {
+    auto pivot_value = array[left_index];
+    auto i = left_index - 1;
+    auto j = right_index + 1;
     while (true) {
-		do {
-			i++;
-		} while (array[i] < pivot);
-		do {
-			j--;
-		} while (array[j] > pivot);
+        do {
+            i++;
+        } while (array[i] < pivot_value);
+        do {
+            j--;
+        } while (array[j] > pivot_value);
 
         if (i >= j) {
-			return j;
-		}
-		array[i] += array[j];
-		array[j] = array[i] - array[j];
-		array[i] -= array[j];
-	}
-    return 0;
+            return j;
+        }
+        std::swap(array[i], array[j]);
+    }
 }
 
-void quicksort(int* array, int left_index, int right_index) {
-    if (left_index < right_index)
-	{
-		int pivot = get_partition(array, left_index, right_index);
-		quicksort(array, left_index, pivot);
-		quicksort(array, pivot + 1, right_index);
-	}
+void quicksort(int *array, int left_index, int right_index) {
+    if (left_index < right_index) {
+        int pivot_index = partition(array, left_index, right_index);
+        quicksort(array, left_index, pivot_index);
+        quicksort(array, pivot_index + 1, right_index);
+    }
 }
