@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cstdlib>
 #include <fstream>
+#include "utils.h"
 #include "quicksort.h"
 
 
@@ -31,5 +32,18 @@ void quicksort(int *array, int left_index, int right_index) {
         int pivot_index = partition(array, left_index, right_index);
         quicksort(array, left_index, pivot_index);
         quicksort(array, pivot_index + 1, right_index);
+    }
+}
+
+void sort_array(char *filename) {
+    int *array = nullptr;
+    int array_length;
+    get_array(filename, &array, array_length);
+
+    quicksort(array, 0, array_length - 1);
+    bool is_correct = is_result_correct(array, array_length);
+    if (!is_correct) {
+        std::cerr << "Array has sorted incorrectly." << std::endl;
+        std::exit(1);
     }
 }
