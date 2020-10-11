@@ -53,8 +53,7 @@ void get_array(char *filename, int **array, int &array_length) {
     if (current_buffer_length > 0) {
         if (data) {
             data = (int *) realloc(data, sizeof(int) * total_array_length);
-            std::memcpy(&data[total_array_length - current_buffer_length], buffer,
-                        sizeof(int) * current_buffer_length);
+            std::memcpy(&data[total_array_length - current_buffer_length], buffer, sizeof(int) * current_buffer_length);
         } else {
             data = (int *) malloc(sizeof(int) * current_buffer_length);
             std::memcpy(data, buffer, sizeof(int) * current_buffer_length);

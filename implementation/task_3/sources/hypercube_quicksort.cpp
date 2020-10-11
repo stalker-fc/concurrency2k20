@@ -1,15 +1,38 @@
 #include "mpi.h"
-#include <chrono>
 #include <cmath>
-#include <iomanip>
 #include <iostream>
 #include <cstdlib>
-#include <fstream>
 #include "quicksort.h"
 #include "hypercube_quicksort.h"
+#include "utils.h"
+
 
 int procs_rank;
 int procs_num;
+
+
+void distribute_data(char *filename, int **array, int &array_length, int **local_array, int &local_array_length) {
+    int *procs_array_lengths = new int[procs_num];
+    int *procs_array_indices = new int[procs_num];;
+    if (procs_rank == 0) {
+        get_array(filename, array, array_length);
+        int chunk_size = array_length / procs_num;
+        int bonus = array_length % procs_num;
+        for (int i = 0; i < procs_num; ++i) {
+            procs_array_lengths[i] = chunk_size;
+            procs_array_indices[i] = i * chunk_size;
+        }
+        procs_array_lengths[procs_num - 1] += bonus;
+    }
+
+    MPI_Scatter(procs_array_lengths, 1, MPI_INT, &local_array_length, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    *local_array = new int[local_array_length];
+    MPI_Scatterv(*array, procs_array_lengths, procs_array_indices, MPI_INT,
+                 *local_array, local_array_length, MPI_INT, 0, MPI_COMM_WORLD);
+
+    delete[] procs_array_lengths;
+    delete[] procs_array_indices;
+}
 
 int get_partition_by_pivot_value(int *array, int left_index, int right_index, int pivot_value) {
     int pivot_index = -1;
@@ -22,7 +45,7 @@ int get_partition_by_pivot_value(int *array, int left_index, int right_index, in
     return pivot_index;
 }
 
-int get_pivot_value(int* local_array, int local_array_length, int mask, MPI_Request request, MPI_Status status) {
+int get_pivot_value(int *local_array, int local_array_length, int mask, MPI_Request request, MPI_Status status) {
     //вычисление опорного элемента происходит в процессе с меньшими элементами
     int pivot = 0;
     if (procs_rank % mask == 0) {
@@ -56,9 +79,8 @@ int get_pivot_value(int* local_array, int local_array_length, int mask, MPI_Requ
 }
 
 
-void hypercube_quicksort(int *array, int left_index, int right_index) {
-    init_MPI();
-    int array_length = right_index - left_index + 1;
+void hypercube_quicksort(int *&local_array, int &local_array_length) {
+    int debug_procs = 0;
     int mask = procs_num; // используется, как делитель для определения типа процесса (принимающий или отправляющий)
 
     int hypercube_dimension = (int) ceil(log(procs_num) / log(2));
@@ -66,27 +88,6 @@ void hypercube_quicksort(int *array, int left_index, int right_index) {
         std::cerr << "Total numbers of processes must be a power of two." << std::endl;
         std::exit(1);
     }
-
-    // отправляем части массива процессам
-    int *procs_array_lengths;
-    int *procs_array_indices;
-    if (procs_rank == 0) {
-        int chunk_size = array_length / procs_num;
-        int bonus = array_length % procs_num;
-        procs_array_lengths = new int[procs_num];
-        procs_array_indices = new int[procs_num];
-        for (int i = 0; i < procs_num; ++i) {
-            procs_array_lengths[i] = chunk_size;
-            procs_array_indices[i] = i * chunk_size;
-        }
-        procs_array_lengths[procs_num - 1] += bonus;
-    }
-
-    int local_array_length;
-    MPI_Scatter(procs_array_lengths, 1, MPI_INT, &local_array_length, 1, MPI_INT, 0, MPI_COMM_WORLD);
-    auto *local_array = new int[local_array_length];
-    MPI_Scatterv(array, procs_array_lengths, procs_array_indices, MPI_INT,
-                 local_array, local_array_length, MPI_INT, 0, MPI_COMM_WORLD);
 
     MPI_Request request;
     MPI_Status status;
@@ -104,16 +105,18 @@ void hypercube_quicksort(int *array, int left_index, int right_index) {
     int pivot_value;
     int procs_type;
     for (std::size_t stage_index = 0; stage_index < hypercube_dimension; ++stage_index) {
-        // в зависимости от номера процесса будут
-        //в type == 0  - меньшие значения
+        // при `procs_type == 0` в блоке значения элементов массива меньше опорного элемента
         if (procs_rank % mask < mask / 2) {
             procs_type = 0;
         } else {
             procs_type = 1;
         }
-
+        std::cout << "Procs rank " << procs_rank << " Procs type " << procs_type << std::endl;
         // получаем опорное значение
         pivot_value = get_pivot_value(local_array, local_array_length, mask, request, status);
+        if (procs_rank == debug_procs) {
+            std::cout << "Pivot value: " << pivot_value << std::endl;
+        }
         // разбиваем массив на 2 половины согласно значению опорного элемента
         int pivot_index = get_partition_by_pivot_value(local_array, 0, local_array_length - 1, pivot_value);
         // производим обмен половин
@@ -133,7 +136,6 @@ void hypercube_quicksort(int *array, int left_index, int right_index) {
             new_local_array_length = pivot_index + 1 + cur_receive_count;
             new_local_array = new int[new_local_array_length];
 
-
             for (std::size_t j = 0; j < pivot_index + 1; ++j)
                 new_local_array[j] = local_array[j];
 
@@ -146,7 +148,6 @@ void hypercube_quicksort(int *array, int left_index, int right_index) {
             if (cur_receive_count > 0)
                 cur_recieve_buffer = &(new_local_array[pivot_index + 1]);
 
-
             //sendrecv
             MPI_Isend(send_buffer, send_count, MPI_INT,
                       partner_procs_rank, 0,
@@ -155,13 +156,6 @@ void hypercube_quicksort(int *array, int left_index, int right_index) {
                       partner_procs_rank, MPI_ANY_TAG,
                       MPI_COMM_WORLD, &request);
             MPI_Wait(&request, &status);
-
-
-            free(local_array);
-            local_array = new_local_array;
-            local_array_length = new_local_array_length;
-
-
         } else {
             // собираю части большие опорного элемента (правые)
             // моя пара = -procs_num/2
@@ -188,7 +182,6 @@ void hypercube_quicksort(int *array, int left_index, int right_index) {
             if (cur_receive_count > 0)
                 cur_recieve_buffer = &(new_local_array[local_array_length - pivot_index - 1]);
 
-
             //sendrecv
             MPI_Isend(send_buffer, send_count, MPI_INT,
                       partner_procs_rank, 0,
@@ -197,17 +190,31 @@ void hypercube_quicksort(int *array, int left_index, int right_index) {
                       partner_procs_rank, MPI_ANY_TAG,
                       MPI_COMM_WORLD, &request);
             MPI_Wait(&request, &status);
-
-            free(local_array);
-            local_array = new_local_array;
-            local_array_length = new_local_array_length;
         }
 
-        mask = mask >> 1;
+        delete[] local_array;
+        local_array = new_local_array;
+        local_array_length = new_local_array_length;
+
+        mask = mask / 2;
         MPI_Barrier(MPI_COMM_WORLD);
     }
 
+    if (procs_rank == debug_procs) {
+        std::cout << "second data:" << std::endl;
+        for (int i = 0; i < local_array_length; i++)
+            std::cout << local_array[i] << " ";
+        std::cout << std::endl << "*****" << std::endl;
+    }
+
     quicksort(local_array, 0, local_array_length - 1);
+}
+
+
+void merge_local_arrays(int *array, int array_length, int *local_array, int local_array_length) {
+    auto procs_array_lengths = new int[procs_num];
+    auto procs_array_indices = new int[procs_num];
+
     MPI_Gather(&local_array_length, 1, MPI_INT, procs_array_lengths, 1, MPI_INT, 0, MPI_COMM_WORLD);
 
     if (procs_rank == 0) {
@@ -220,16 +227,33 @@ void hypercube_quicksort(int *array, int left_index, int right_index) {
                 array, procs_array_lengths, procs_array_indices,
                 MPI_INT, 0, MPI_COMM_WORLD);
 
-    if (procs_rank == 0) {
-        free(procs_array_lengths);
-        free(procs_array_indices);
-    }
 
-    free(local_array);
+    delete[] procs_array_lengths;
+    delete[] procs_array_indices;
 }
 
-void init_MPI() {
+
+void parallel_sort_array(char *filename) {
+    int *array = nullptr;
+    int *local_array = nullptr;
+    int array_length, local_array_length;
+
+    MPI_Init(nullptr, nullptr);
     MPI_Comm_size(MPI_COMM_WORLD, &procs_num);
     MPI_Comm_rank(MPI_COMM_WORLD, &procs_rank);
-}
 
+    distribute_data(filename, &array, array_length, &local_array, local_array_length);
+    hypercube_quicksort(local_array, local_array_length);
+    merge_local_arrays(array, array_length, local_array, local_array_length);
+
+    if (procs_rank == 0) {
+        bool is_correct = is_result_correct(array, array_length);
+        if (!is_correct) {
+            std::cerr << "Array has sorted incorrectly." << std::endl;
+            std::exit(1);
+        }
+    }
+    delete[] array;
+    delete[] local_array;
+    MPI_Finalize();
+}
