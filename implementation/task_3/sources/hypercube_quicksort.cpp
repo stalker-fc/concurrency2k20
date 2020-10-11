@@ -81,7 +81,7 @@ int get_pivot_value(int *local_array, int local_array_length, int mask, MPI_Requ
 
 void hypercube_quicksort(int *&local_array, int &local_array_length) {
     int debug_procs = 0;
-    int mask = procs_num; // используется, как делитель для определения типа процесса (принимающий или отправляющий)
+    int mask = procs_num; // используется, как делитель для определения типа процесса
 
     int hypercube_dimension = (int) ceil(log(procs_num) / log(2));
     if ((procs_num & (procs_num - 1)) != 0) {
@@ -103,15 +103,7 @@ void hypercube_quicksort(int *&local_array, int &local_array_length) {
     int new_local_array_length;
 
     int pivot_value;
-    int procs_type;
     for (std::size_t stage_index = 0; stage_index < hypercube_dimension; ++stage_index) {
-        // при `procs_type == 0` в блоке значения элементов массива меньше опорного элемента
-        if (procs_rank % mask < mask / 2) {
-            procs_type = 0;
-        } else {
-            procs_type = 1;
-        }
-        std::cout << "Procs rank " << procs_rank << " Procs type " << procs_type << std::endl;
         // получаем опорное значение
         pivot_value = get_pivot_value(local_array, local_array_length, mask, request, status);
         if (procs_rank == debug_procs) {
@@ -120,7 +112,7 @@ void hypercube_quicksort(int *&local_array, int &local_array_length) {
         // разбиваем массив на 2 половины согласно значению опорного элемента
         int pivot_index = get_partition_by_pivot_value(local_array, 0, local_array_length - 1, pivot_value);
         // производим обмен половин
-        if (procs_type == 0) {
+        if (procs_rank % mask < mask / 2) {
             //собираем части меньшие опорного элемента (левые)
             //моя пара = +mask / 2
             partner_procs_rank = procs_rank + mask / 2;
@@ -128,7 +120,6 @@ void hypercube_quicksort(int *&local_array, int &local_array_length) {
             send_count = local_array_length - pivot_index - 1;
 
             MPI_Send(&send_count, 1, MPI_INT, partner_procs_rank, 0, MPI_COMM_WORLD);
-
             //узнаем сколько принимать
             MPI_Recv(&cur_receive_count, 1, MPI_INT, partner_procs_rank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 
@@ -200,14 +191,8 @@ void hypercube_quicksort(int *&local_array, int &local_array_length) {
         MPI_Barrier(MPI_COMM_WORLD);
     }
 
-    if (procs_rank == debug_procs) {
-        std::cout << "second data:" << std::endl;
-        for (int i = 0; i < local_array_length; i++)
-            std::cout << local_array[i] << " ";
-        std::cout << std::endl << "*****" << std::endl;
-    }
-
     quicksort(local_array, 0, local_array_length - 1);
+    std::cout << "I`m alive 1" << std::endl;
 }
 
 

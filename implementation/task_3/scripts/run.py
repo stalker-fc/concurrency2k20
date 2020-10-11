@@ -10,7 +10,7 @@ import numpy as np
 EXECUTABLE_FILE = Path(__file__).parent.parent / 'build' / 'main'
 
 TEST_CASES = {
-    0: 100000,
+    0: 52750,
     # 1: 10000,
     # 2: 100000,
     # 3: 1000000,
@@ -49,7 +49,7 @@ class BenchmarkResult:
 
 
 def generate_random_array(length: int, path_to_save: str):
-    array = np.random.randint(low=0, high=length, size=length)
+    array = np.random.randint(low=0, high=10, size=100000)
     with open(path_to_save, 'w') as out:
         out.write(' '.join(map(str, array)))
 
