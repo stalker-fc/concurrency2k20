@@ -10,16 +10,16 @@ import numpy as np
 EXECUTABLE_FILE = Path(__file__).parent.parent / 'build' / 'main'
 
 TEST_CASES = {
-    0: 52750,
-    # 1: 10000,
-    # 2: 100000,
-    # 3: 1000000,
+    0: 100_000,
+    1: 1_000_000,
+    2: 10_000_000,
+    3: 100_000_000,
 }
 MODES = {
     1: "sequential",
     2: "mpi 2 processes",
-    # 3: "mpi 4 processes",
-    # 4: "mpi 8 processes",
+    3: "mpi 4 processes",
+    4: "mpi 8 processes",
 }
 
 MODE_COLORS = {
@@ -49,7 +49,7 @@ class BenchmarkResult:
 
 
 def generate_random_array(length: int, path_to_save: str):
-    array = np.random.randint(low=0, high=10, size=100000)
+    array = np.random.randint(low=0, high=length, size=length)
     with open(path_to_save, 'w') as out:
         out.write(' '.join(map(str, array)))
 

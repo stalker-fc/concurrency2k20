@@ -108,15 +108,12 @@ void hypercube_quicksort(int *&local_array, int &local_array_length) {
             MPI_Sendrecv(&send_count, 1, MPI_INT, partner_procs_rank, 0,
                          &receive_count, 1, MPI_INT, partner_procs_rank, 0,
                          MPI_COMM_WORLD, &status);
-            std::cout << "procs_status " << 0 << " procs_rank " << procs_rank << " partner_procs_rank "
-                      << partner_procs_rank << " send_count " << send_count << std::endl;
-
-            //подготовим новый массив побольше
+            // подготовим новый массив побольше
             new_local_array_length = pivot_index + 1 + receive_count;
             new_local_array = new int[new_local_array_length];
             for (std::size_t j = 0; j < pivot_index + 1; ++j)
                 new_local_array[j] = local_array[j];
-            //и правильный указатель
+            // и правильный указатель
             send_buffer = local_array;
             if (pivot_index + 1 < local_array_length)
                 send_buffer = &(local_array[pivot_index + 1]);
@@ -139,16 +136,14 @@ void hypercube_quicksort(int *&local_array, int &local_array_length) {
                          &receive_count, 1, MPI_INT, partner_procs_rank, 0,
                          MPI_COMM_WORLD, &status);
 
-            std::cout << "procs_status " << 0 << " procs_rank " << procs_rank << " partner_procs_rank "
-                      << partner_procs_rank << " send_count " << send_count << std::endl;
-            //подготовим новый массив побольше
+            // подготовим новый массив побольше
             new_local_array_length = local_array_length - pivot_index - 1 + receive_count;
             new_local_array = new int[new_local_array_length];
 
             for (std::size_t j = 0; j < local_array_length - pivot_index - 1; ++j)
                 new_local_array[j] = local_array[j + pivot_index + 1];
 
-            //и правильный указатель
+            // и правильный указатель
             send_buffer = local_array;
             receive_buffer = new_local_array;
             if (receive_count > 0)
