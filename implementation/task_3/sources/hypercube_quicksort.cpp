@@ -67,7 +67,6 @@ int get_pivot_value(int *local_array, int local_array_length, int mask, MPI_Requ
 
 
 void hypercube_quicksort(int *&local_array, int &local_array_length) {
-    int debug_procs = 0;
     int mask = procs_num; // используется, как делитель для определения типа процесса
 
     int hypercube_dimension = (int) ceil(log(procs_num) / log(2));
@@ -93,9 +92,6 @@ void hypercube_quicksort(int *&local_array, int &local_array_length) {
     for (std::size_t stage_index = hypercube_dimension; stage_index > 0; --stage_index) {
         // получаем опорное значение
         pivot_value = get_pivot_value(local_array, local_array_length, mask, request, status);
-        if (procs_rank == debug_procs) {
-            std::cout << "stage: " << stage_index << std::endl;
-        }
         // разбиваем массив на 2 половины согласно значению опорного элемента
         int pivot_index = get_partition_by_pivot_value(local_array, 0, local_array_length - 1, pivot_value);
 
@@ -103,24 +99,23 @@ void hypercube_quicksort(int *&local_array, int &local_array_length) {
         // производим обмен половин
         // определяем партнера по разнице в N-ом бите
         if (((procs_rank & mask) >> (stage_index - 1)) == 0) {
-            //собираем части меньшие опорного элемента (левые)
-            //моя пара = +mask / 2
+            // собираем части меньшие опорного элемента (левые)
             partner_procs_rank = procs_rank + mask;
-            //скажем партнеру, сколько передадим ему
+            // скажем паре, сколько передадим ему и узнаем, сколько нужно будет принимать значений
             send_count = local_array_length - pivot_index - 1;
-
+            if (send_count < 0)
+                send_count = 0;
             MPI_Sendrecv(&send_count, 1, MPI_INT, partner_procs_rank, 0,
                          &receive_count, 1, MPI_INT, partner_procs_rank, 0,
                          MPI_COMM_WORLD, &status);
             std::cout << "procs_status " << 0 << " procs_rank " << procs_rank << " partner_procs_rank "
-                      << partner_procs_rank << std::endl;
+                      << partner_procs_rank << " send_count " << send_count << std::endl;
+
             //подготовим новый массив побольше
             new_local_array_length = pivot_index + 1 + receive_count;
             new_local_array = new int[new_local_array_length];
-
             for (std::size_t j = 0; j < pivot_index + 1; ++j)
                 new_local_array[j] = local_array[j];
-
             //и правильный указатель
             send_buffer = local_array;
             if (pivot_index + 1 < local_array_length)
@@ -130,32 +125,25 @@ void hypercube_quicksort(int *&local_array, int &local_array_length) {
             if (receive_count > 0)
                 receive_buffer = &(new_local_array[pivot_index + 1]);
 
-            MPI_Isend(send_buffer, send_count, MPI_INT,
-                      partner_procs_rank, 0,
-                      MPI_COMM_WORLD, &request);
-            MPI_Irecv(receive_buffer, receive_count, MPI_INT,
-                      partner_procs_rank, MPI_ANY_TAG,
-                      MPI_COMM_WORLD, &request);
-            MPI_Wait(&request, &status);
+            MPI_Sendrecv(send_buffer, send_count, MPI_INT, partner_procs_rank, 0,
+                         receive_buffer, receive_count, MPI_INT, partner_procs_rank, 0,
+                         MPI_COMM_WORLD, &status);
         } else {
             // собираю части большие опорного элемента (правые)
-            // моя пара = -procs_num/2
             partner_procs_rank = procs_rank - mask;
-
-            //узнаем сколько принимать
-//            MPI_Recv(&receive_count, 1, MPI_INT, partner_procs_rank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-
-            //скажем паре, сколько передадим ему
+            //скажем паре, сколько передадим ему и узнаем, сколько нужно будет принимать значений
             send_count = pivot_index + 1;
-//          MPI_Send(&send_count, 1, MPI_INT, partner_procs_rank, 0, MPI_COMM_WORLD);
+            if (send_count > local_array_length)
+                send_count = pivot_index;
             MPI_Sendrecv(&send_count, 1, MPI_INT, partner_procs_rank, 0,
                          &receive_count, 1, MPI_INT, partner_procs_rank, 0,
                          MPI_COMM_WORLD, &status);
-            std::cout << "procs_status " << 1 << " procs_rank " << procs_rank << " partner_procs_rank "
-                      << partner_procs_rank << std::endl;
+
+            std::cout << "procs_status " << 0 << " procs_rank " << procs_rank << " partner_procs_rank "
+                      << partner_procs_rank << " send_count " << send_count << std::endl;
             //подготовим новый массив побольше
             new_local_array_length = local_array_length - pivot_index - 1 + receive_count;
-            new_local_array = (int *) malloc((new_local_array_length) * sizeof(int));
+            new_local_array = new int[new_local_array_length];
 
             for (std::size_t j = 0; j < local_array_length - pivot_index - 1; ++j)
                 new_local_array[j] = local_array[j + pivot_index + 1];
@@ -166,18 +154,13 @@ void hypercube_quicksort(int *&local_array, int &local_array_length) {
             if (receive_count > 0)
                 receive_buffer = &(new_local_array[local_array_length - pivot_index - 1]);
 
-            MPI_Irecv(receive_buffer, receive_count, MPI_INT,
-                      partner_procs_rank, MPI_ANY_TAG,
-                      MPI_COMM_WORLD, &request);
-            MPI_Isend(send_buffer, send_count, MPI_INT,
-                      partner_procs_rank, 0,
-                      MPI_COMM_WORLD, &request);
-            MPI_Wait(&request, &status);
+            MPI_Sendrecv(send_buffer, send_count, MPI_INT, partner_procs_rank, 0,
+                         receive_buffer, receive_count, MPI_INT, partner_procs_rank, 0,
+                         MPI_COMM_WORLD, &status);
         }
         delete[] local_array;
         local_array = new_local_array;
         local_array_length = new_local_array_length;
-        MPI_Barrier(MPI_COMM_WORLD);
     }
 
     quicksort(local_array, 0, local_array_length - 1);
