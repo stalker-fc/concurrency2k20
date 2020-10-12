@@ -54,26 +54,13 @@ int get_pivot_value(int *local_array, int local_array_length, int mask, MPI_Requ
             pivot = local_array[0];
         }
         for (std::size_t i = procs_rank + 1; i < procs_rank + mask; ++i) {
-            MPI_Isend(&pivot,
-                      1,
-                      MPI_INT,
-                      i,
-                      0,
-                      MPI_COMM_WORLD,
-                      &request);
+            MPI_Isend(&pivot, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &request);
         }
     } else {
         int from;
         from = procs_rank - procs_rank % mask;
-        MPI_Irecv(&pivot,
-                  1,
-                  MPI_INT,
-                  from,
-                  MPI_ANY_TAG,
-                  MPI_COMM_WORLD,
-                  &request);
+        MPI_Irecv(&pivot, 1, MPI_INT, from, MPI_ANY_TAG, MPI_COMM_WORLD, &request);
     }
-
     MPI_Wait(&request, &status);
     return pivot;
 }
@@ -96,35 +83,39 @@ void hypercube_quicksort(int *&local_array, int &local_array_length) {
     int send_count;
     int *send_buffer;
 
-    int cur_receive_count;
-    int *cur_recieve_buffer;
+    int receive_count;
+    int *receive_buffer;
 
     int *new_local_array;
     int new_local_array_length;
 
     int pivot_value;
-    for (std::size_t stage_index = 0; stage_index < hypercube_dimension; ++stage_index) {
+    for (std::size_t stage_index = hypercube_dimension; stage_index > 0; --stage_index) {
         // получаем опорное значение
         pivot_value = get_pivot_value(local_array, local_array_length, mask, request, status);
         if (procs_rank == debug_procs) {
-            std::cout << "Pivot value: " << pivot_value << std::endl;
+            std::cout << "stage: " << stage_index << std::endl;
         }
         // разбиваем массив на 2 половины согласно значению опорного элемента
         int pivot_index = get_partition_by_pivot_value(local_array, 0, local_array_length - 1, pivot_value);
+
+        mask = mask >> 1;
         // производим обмен половин
-        if (procs_rank % mask < mask / 2) {
+        // определяем партнера по разнице в N-ом бите
+        if (((procs_rank & mask) >> (stage_index - 1)) == 0) {
             //собираем части меньшие опорного элемента (левые)
             //моя пара = +mask / 2
-            partner_procs_rank = procs_rank + mask / 2;
+            partner_procs_rank = procs_rank + mask;
             //скажем партнеру, сколько передадим ему
             send_count = local_array_length - pivot_index - 1;
 
-            MPI_Send(&send_count, 1, MPI_INT, partner_procs_rank, 0, MPI_COMM_WORLD);
-            //узнаем сколько принимать
-            MPI_Recv(&cur_receive_count, 1, MPI_INT, partner_procs_rank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
-
+            MPI_Sendrecv(&send_count, 1, MPI_INT, partner_procs_rank, 0,
+                         &receive_count, 1, MPI_INT, partner_procs_rank, 0,
+                         MPI_COMM_WORLD, &status);
+            std::cout << "procs_status " << 0 << " procs_rank " << procs_rank << " partner_procs_rank "
+                      << partner_procs_rank << std::endl;
             //подготовим новый массив побольше
-            new_local_array_length = pivot_index + 1 + cur_receive_count;
+            new_local_array_length = pivot_index + 1 + receive_count;
             new_local_array = new int[new_local_array_length];
 
             for (std::size_t j = 0; j < pivot_index + 1; ++j)
@@ -135,33 +126,35 @@ void hypercube_quicksort(int *&local_array, int &local_array_length) {
             if (pivot_index + 1 < local_array_length)
                 send_buffer = &(local_array[pivot_index + 1]);
 
-            cur_recieve_buffer = new_local_array;
-            if (cur_receive_count > 0)
-                cur_recieve_buffer = &(new_local_array[pivot_index + 1]);
+            receive_buffer = new_local_array;
+            if (receive_count > 0)
+                receive_buffer = &(new_local_array[pivot_index + 1]);
 
-            //sendrecv
             MPI_Isend(send_buffer, send_count, MPI_INT,
                       partner_procs_rank, 0,
                       MPI_COMM_WORLD, &request);
-            MPI_Irecv(cur_recieve_buffer, cur_receive_count, MPI_INT,
+            MPI_Irecv(receive_buffer, receive_count, MPI_INT,
                       partner_procs_rank, MPI_ANY_TAG,
                       MPI_COMM_WORLD, &request);
             MPI_Wait(&request, &status);
         } else {
             // собираю части большие опорного элемента (правые)
             // моя пара = -procs_num/2
-            partner_procs_rank = procs_rank - procs_num / 2;
+            partner_procs_rank = procs_rank - mask;
 
             //узнаем сколько принимать
-            MPI_Recv(&cur_receive_count, 1, MPI_INT, partner_procs_rank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
+//            MPI_Recv(&receive_count, 1, MPI_INT, partner_procs_rank, MPI_ANY_TAG, MPI_COMM_WORLD, &status);
 
-            //скажем паре, сколько передади ему
+            //скажем паре, сколько передадим ему
             send_count = pivot_index + 1;
-            MPI_Send(&send_count, 1, MPI_INT, partner_procs_rank, 0, MPI_COMM_WORLD);
-
-
+//          MPI_Send(&send_count, 1, MPI_INT, partner_procs_rank, 0, MPI_COMM_WORLD);
+            MPI_Sendrecv(&send_count, 1, MPI_INT, partner_procs_rank, 0,
+                         &receive_count, 1, MPI_INT, partner_procs_rank, 0,
+                         MPI_COMM_WORLD, &status);
+            std::cout << "procs_status " << 1 << " procs_rank " << procs_rank << " partner_procs_rank "
+                      << partner_procs_rank << std::endl;
             //подготовим новый массив побольше
-            new_local_array_length = local_array_length - pivot_index - 1 + cur_receive_count;
+            new_local_array_length = local_array_length - pivot_index - 1 + receive_count;
             new_local_array = (int *) malloc((new_local_array_length) * sizeof(int));
 
             for (std::size_t j = 0; j < local_array_length - pivot_index - 1; ++j)
@@ -169,30 +162,25 @@ void hypercube_quicksort(int *&local_array, int &local_array_length) {
 
             //и правильный указатель
             send_buffer = local_array;
-            cur_recieve_buffer = new_local_array;
-            if (cur_receive_count > 0)
-                cur_recieve_buffer = &(new_local_array[local_array_length - pivot_index - 1]);
+            receive_buffer = new_local_array;
+            if (receive_count > 0)
+                receive_buffer = &(new_local_array[local_array_length - pivot_index - 1]);
 
-            //sendrecv
+            MPI_Irecv(receive_buffer, receive_count, MPI_INT,
+                      partner_procs_rank, MPI_ANY_TAG,
+                      MPI_COMM_WORLD, &request);
             MPI_Isend(send_buffer, send_count, MPI_INT,
                       partner_procs_rank, 0,
                       MPI_COMM_WORLD, &request);
-            MPI_Irecv(cur_recieve_buffer, cur_receive_count, MPI_INT,
-                      partner_procs_rank, MPI_ANY_TAG,
-                      MPI_COMM_WORLD, &request);
             MPI_Wait(&request, &status);
         }
-
         delete[] local_array;
         local_array = new_local_array;
         local_array_length = new_local_array_length;
-
-        mask = mask / 2;
         MPI_Barrier(MPI_COMM_WORLD);
     }
 
     quicksort(local_array, 0, local_array_length - 1);
-    std::cout << "I`m alive 1" << std::endl;
 }
 
 
