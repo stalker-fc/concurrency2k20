@@ -198,21 +198,26 @@ Vector solve_system_of_linear_equations_mpi(Matrix A, Vector b, double eps) {
     int N_ROWS = A.n_rows;
     int N_COLUMNS = A.n_columns;
 
-    int chunk_size = N_ROWS / procs_num;
-    int bonus = N_ROWS % procs_num;
+    // split matrix into equal parts
+    // https://stackoverflow.com/a/36526485
     auto local_rows = new int[procs_num];
     auto local_rows_offsets = new int[procs_num];
     auto local_data_sizes = new int[procs_num];
     auto local_data_offsets = new int[procs_num];
-    for (int i = 0; i < procs_num; ++i) {
+    int chunk_size = N_ROWS / procs_num;
+    int bonus = N_ROWS - chunk_size * procs_num;
+    for (int i = 0, start = 0, end = chunk_size; start < N_ROWS; start = end, end = start + chunk_size, i++) {
         local_rows[i] = chunk_size;
-        local_rows_offsets[i] = i * chunk_size;
+        local_rows_offsets[i] = start;
         local_data_sizes[i] = chunk_size * N_COLUMNS;
-        local_data_offsets[i] = i * chunk_size * N_COLUMNS;
+        local_data_offsets[i] = start * N_COLUMNS;
+        if (bonus) {
+            end++;
+            bonus--;
+            local_rows[i]++;
+            local_data_sizes[i] += N_COLUMNS;
+        }
     }
-    local_rows[procs_num - 1] += bonus;
-    local_data_sizes[procs_num - 1] += bonus * N_COLUMNS;
-
     auto local_N_ROWS = local_rows[procs_rank];
 
     // declare data for main process

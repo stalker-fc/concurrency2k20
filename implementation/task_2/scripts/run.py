@@ -113,7 +113,7 @@ def plot_results(benchmark_results: List[BenchmarkResult]):
 
 def plot_time_graphics(benchmark_results: List[BenchmarkResult]):
     plt.figure(figsize=(4, 4))
-    left, width = 0.11, 0.85
+    left, width = 0.14, 0.85
     bottom, height = 0.1, 0.85
 
     ax = plt.axes([left, bottom, width, height])
