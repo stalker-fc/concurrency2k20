@@ -11,22 +11,21 @@ EXECUTABLE_FILE = Path(__file__).parent.parent / 'build' / 'main'
 
 TEST_CASES = {
     0: 100_000,
-    1: 1_000_000,
-    2: 10_000_000,
-    3: 100_000_000,
+    1: 500_000,
+    2: 1_000_000,
+    3: 5_000_000,
+    4: 10_000_000,
 }
 MODES = {
     1: "sequential",
     2: "mpi 2 processes",
     3: "mpi 4 processes",
-    4: "mpi 8 processes",
 }
 
 MODE_COLORS = {
     1: '#FB707F',
     2: '#008ECC',
     3: '#6495ED',
-    4: '#D2691E',
 }
 
 SERIAL_MODE = 1
@@ -37,7 +36,6 @@ NUM_OF_PROCESSES = {
     1: 1,
     2: 2,
     3: 4,
-    4: 8
 }
 
 

@@ -55,6 +55,6 @@ make run
 ## Полученные результаты
 Замеры производительности также отражены на графике.
 
-![Effieciency](../../reports/pictures/task_3_efficiency_report.png)
-![Time](../../reports/pictures/task_3_time_report.png)
+![Effieciency](pictures/task_3_efficiency_report.png)
+![Time](pictures/task_3_time_report.png)
 
