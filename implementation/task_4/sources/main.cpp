@@ -1,6 +1,7 @@
 #include <iostream>
-#include "djikstra.h"
 #include "graph.h"
+#include "djikstra.cpp"
+
 
 
 int main(int argc, char *argv[]) {
@@ -12,7 +13,8 @@ int main(int argc, char *argv[]) {
                   << std::endl;
         std::exit(1);
     }
-    struct Graph graph = read_graph_from_file(argv[1]);
+    auto graph = Graph(argv[1]);
+    Djikstra *djikstra;
 
     int mode = atoi(argv[2]);
 
@@ -20,7 +22,8 @@ int main(int argc, char *argv[]) {
     int source = 0;
     switch (mode) {
         case 1:
-            distances = calculate_shortest_distances_sequential(graph, source);
+            djikstra = new SequentialDjikstra(&graph);
+            distances = djikstra->calculate_shortest_distances(source);
             break;
         case 2:
             break;
@@ -34,6 +37,6 @@ int main(int argc, char *argv[]) {
             std::cerr << "Incorrect mode value. It must be [1, 2, 3, 4, 5], but it was " << mode << "." << std::endl;
             std::exit(1);
     }
-    print_distances(distances, graph.n_vertices, argv[2]);
+    djikstra->print_distances();
     return 0;
 }
