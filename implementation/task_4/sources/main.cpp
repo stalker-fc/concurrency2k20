@@ -4,12 +4,11 @@
 
 
 int main(int argc, char *argv[]) {
-    if (argc < 4) {
+    if (argc < 3) {
         std::cerr << "Usage: " << argv[0] << " "
-                  << "`path/to/graph.txt` `path/to/solution.txt`"
-                  << "mode: [`1` for sequential multiplication, "
-                  << "`2` for openmp multiplication, "
-                  << std::endl;
+                  << "`path/to/graph.txt`"
+                  << "mode: [`1` for sequential dijkstra, "
+                  << "`2` for parallel dijkstra]" << std::endl;
         std::exit(1);
     }
     auto graph = Graph(argv[1]);
@@ -32,6 +31,6 @@ int main(int argc, char *argv[]) {
             std::cerr << "Incorrect mode value. It must be [1, 2, 3, 4, 5], but it was " << mode << "." << std::endl;
             std::exit(1);
     }
-    dijkstra->print_distances();
+//    dijkstra->print_distances();
     return 0;
 }
