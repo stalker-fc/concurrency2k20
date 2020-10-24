@@ -9,6 +9,7 @@
 
 int procs_rank;
 int procs_num;
+double start_time;
 
 
 void distribute_data(char *filename, int **array, int &array_length, int **local_array, int &local_array_length) {
@@ -16,6 +17,7 @@ void distribute_data(char *filename, int **array, int &array_length, int **local
     int *procs_array_indices = new int[procs_num];;
     if (procs_rank == 0) {
         get_array(filename, array, array_length);
+        start_time = MPI_Wtime();
         int chunk_size = array_length / procs_num;
         int bonus = array_length % procs_num;
         for (int i = 0; i < procs_num; ++i) {
@@ -192,7 +194,6 @@ void parallel_sort_array(char *filename) {
     MPI_Init(nullptr, nullptr);
     MPI_Comm_size(MPI_COMM_WORLD, &procs_num);
     MPI_Comm_rank(MPI_COMM_WORLD, &procs_rank);
-
     distribute_data(filename, &array, array_length, &local_array, local_array_length);
     hypercube_quicksort(local_array, local_array_length);
     merge_local_arrays(array, array_length, local_array, local_array_length);
@@ -203,6 +204,8 @@ void parallel_sort_array(char *filename) {
             std::cerr << "Array has sorted incorrectly." << std::endl;
             std::exit(1);
         }
+        double end_time = MPI_Wtime();
+        std::cout << procs_num << " " << end_time - start_time << std::endl;
     }
     delete[] array;
     delete[] local_array;

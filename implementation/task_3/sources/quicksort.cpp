@@ -1,3 +1,4 @@
+#include "mpi.h"
 #include <chrono>
 #include <cmath>
 #include <iomanip>
@@ -38,12 +39,15 @@ void quicksort(int *array, int left_index, int right_index) {
 void sort_array(char *filename) {
     int *array = nullptr;
     int array_length;
+    MPI_Init(nullptr, nullptr);
     get_array(filename, &array, array_length);
-
+    double start_time = MPI_Wtime();
     quicksort(array, 0, array_length - 1);
     bool is_correct = is_result_correct(array, array_length);
     if (!is_correct) {
-        std::cerr << "Array has sorted incorrectly." << std::endl;
+        std::cout << "Array has sorted incorrectly." << std::endl;
         std::exit(1);
     }
+    double end_time = MPI_Wtime();
+    std::cout << "1 " << end_time - start_time << std::endl;
 }
