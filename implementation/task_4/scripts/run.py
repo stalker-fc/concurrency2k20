@@ -12,9 +12,10 @@ EXECUTABLE_FILE = Path(__file__).parent.parent / 'build' / 'main'
 
 TEST_CASES = {
     0: 100,
-    1: 1_000,
-    2: 10_000,
-    3: 100_000,
+    1: 500,
+    2: 1_000,
+    3: 5_000,
+    4: 10_000,
 }
 MODES = {
     1: "sequential dijkstra",
@@ -29,7 +30,7 @@ MODE_COLORS = {
 SERIAL_MODE = 1
 
 GRAPH_DATA_PATH = 'graph.txt'
-LEFT, BOTTOM, RIGHT, TOP = 0, 0, 100_000, 100_000
+LEFT, BOTTOM, RIGHT, TOP = 0, 0, 100, 100
 SOURCE_NODE = 0
 
 
@@ -42,9 +43,8 @@ class BenchmarkResult:
 
 def generate_graph(n_vertices: int, path_to_save: str):
     source = np.array((0, 0))
-    destination = np.array((1, 1))
     points = np.random.rand(n_vertices - 2, 2)
-    points = np.vstack((source, destination, points))
+    points = np.vstack((source, points))
     deltas = np.array([RIGHT - LEFT, TOP - BOTTOM])
     points = points * deltas + np.array([LEFT, BOTTOM])
     points = points.astype(float)
@@ -57,6 +57,7 @@ def generate_graph(n_vertices: int, path_to_save: str):
     weights = np.linalg.norm(points[edges[:, 0]] - points[edges[:, 1]], axis=1).astype(int)
     data = np.zeros(shape=(n_vertices, n_vertices), dtype=int)
     data[edges[:, 0], edges[:, 1]] = weights
+    data[edges[:, 1], edges[:, 0]] = weights
     with open(path_to_save, 'w') as out:
         out.write(f'{n_vertices}\n')
         out.write('\n'.join([' '.join(map(str, row)) for row in data]))

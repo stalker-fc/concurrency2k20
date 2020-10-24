@@ -33,6 +33,8 @@ public:
     ParallelDijkstra(Graph *graph1) : Dijkstra(graph1) {}
 
     int *calculate_shortest_distances(int source);
+
+    int get_closest_vertex();
 };
 
 #endif //DJIKSTRA_DIJKSTRA_H

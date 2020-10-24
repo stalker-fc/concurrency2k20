@@ -43,9 +43,8 @@ make run
 ## Полученные результаты
 Замеры производительности также отражены на графике.
 
-![Effieciency](../../reports/pictures/task_4_efficiency_report.png)
-![Time](../../reports/pictures/task_4_time_report.png)
-
+![Effieciency](pictures/task_4_efficiency_report.png)
+![Time](pictures/task_4_time_report.png)
 
 Исходя из представленных выше графиков, было получено существенное ускорение работы программы при количестве вершин в графе более 500.
 

@@ -28,7 +28,7 @@ Graph::Graph(char *filename) {
     for (std::size_t i = 0; i < n_vertices; i++) {
         adjacency_matrix[i] = new int[n_vertices];
     }
-    for (std::size_t i = 0; i < n_vertices; ++i)
+    for (std::size_t i = 0; i < n_vertices * n_vertices; ++i)
         input >> adjacency_matrix[i / n_vertices][i % n_vertices];
 }
 

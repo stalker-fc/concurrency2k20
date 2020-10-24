@@ -1,4 +1,5 @@
 #include <iostream>
+#include "omp.h"
 #include "graph.h"
 #include "dijkstra.h"
 
@@ -18,6 +19,7 @@ int main(int argc, char *argv[]) {
 
     int *distances;
     int source = 0;
+
     switch (mode) {
         case 1:
             dijkstra = new SequentialDijkstra(&graph);
@@ -31,6 +33,7 @@ int main(int argc, char *argv[]) {
             std::cerr << "Incorrect mode value. It must be [1, 2, 3, 4, 5], but it was " << mode << "." << std::endl;
             std::exit(1);
     }
-//    dijkstra->print_distances();
+//    char *filename = "data.txt";
+//    dijkstra->save_distances_to_file(filename);
     return 0;
 }
