@@ -84,7 +84,7 @@ int *ParallelDijkstra::calculate_shortest_distances(int source) {
     distances[source] = 0;
     for (int i = 0; i < graph->n_vertices; ++i) {
         int u = get_closest_vertex();
-        if (u < 0) // если вершина достижима
+        if (u < 0) // если вершина недостижима
             break;
 
         is_visited[u] = true;

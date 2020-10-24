@@ -16,6 +16,7 @@ TEST_CASES = {
     2: 1_000,
     3: 5_000,
     4: 10_000,
+    5: 15_000,
 }
 MODES = {
     1: "sequential dijkstra",
@@ -42,17 +43,23 @@ class BenchmarkResult:
 
 
 def generate_graph(n_vertices: int, path_to_save: str):
-    source = np.array((0, 0))
-    points = np.random.rand(n_vertices - 2, 2)
-    points = np.vstack((source, points))
+    points = np.random.rand(n_vertices, 2)
     deltas = np.array([RIGHT - LEFT, TOP - BOTTOM])
     points = points * deltas + np.array([LEFT, BOTTOM])
     points = points.astype(float)
 
-    mesh = spatial.Delaunay(points, incremental=True)
-    edges = np.vstack([np.array([(a, b), (b, c), (c, a)]) for (a, b, c) in mesh.simplices])
-    edges.sort(axis=1)
-    edges = np.unique(edges, axis=0)
+    kdtree = spatial.cKDTree(data=points)
+    inds = kdtree.query(points, k=20)[1][:, 1:]
+    pair_indices = np.stack([np.repeat(np.arange(n_vertices).reshape(-1, 1),
+                                       19, axis=-1), inds], axis=-1).reshape(-1, 2)
+    pair_indices.sort(axis=1)
+    edges = np.unique(pair_indices, axis=0)
+
+
+    # mesh = spatial.Delaunay(points, incremental=True)
+    # edges = np.vstack([np.array([(a, b), (b, c), (c, a)]) for (a, b, c) in mesh.simplices])
+    # edges.sort(axis=1)
+    # edges = np.unique(edges, axis=0)
 
     weights = np.linalg.norm(points[edges[:, 0]] - points[edges[:, 1]], axis=1).astype(int)
     data = np.zeros(shape=(n_vertices, n_vertices), dtype=int)
@@ -68,16 +75,17 @@ def benchmark():
     for test_case, length in TEST_CASES.items():
         generate_graph(length, GRAPH_DATA_PATH)
         for mode in MODES:
-            st = time.time()
-            exit_code = subprocess.call([EXECUTABLE_FILE, GRAPH_DATA_PATH, str(mode)])
-            if exit_code != 0:
-                print(f'Error in benchmarking. Test Case `{test_case}`, mode `{mode}`')
-            execution_time_sec = time.time() - st
-            benchmark_results.append(BenchmarkResult(
-                test_case,
-                mode,
-                execution_time_sec
-            ))
+            for _ in range(5):
+                st = time.time()
+                exit_code = subprocess.call([EXECUTABLE_FILE, GRAPH_DATA_PATH, str(mode)])
+                if exit_code != 0:
+                    print(f'Error in benchmarking. Test Case `{test_case}`, mode `{mode}`')
+                execution_time_sec = time.time() - st
+                benchmark_results.append(BenchmarkResult(
+                    test_case,
+                    mode,
+                    execution_time_sec
+                ))
 
     plot_results(benchmark_results)
 
@@ -101,7 +109,7 @@ def plot_results(benchmark_results: List[BenchmarkResult]):
 
 def plot_time_graphics(benchmark_results: List[BenchmarkResult]):
     plt.figure(figsize=(4, 4))
-    left, width = 0.11, 0.85
+    left, width = 0.12, 0.85
     bottom, height = 0.1, 0.85
 
     ax = plt.axes([left, bottom, width, height])
@@ -171,5 +179,70 @@ def plot_efficiency_graphics(benchmark_results: List[BenchmarkResult]):
     plt.savefig('task_4_efficiency_report.png', format='png', dpi=200)
 
 
+def kek():
+    results = [
+        BenchmarkResult(
+            test_case=0,
+            mode=1,
+            execution_time_sec=0.000151487
+        ),
+        BenchmarkResult(
+            test_case=0,
+            mode=2,
+            execution_time_sec=0.0019995
+        ),
+        BenchmarkResult(
+            test_case=1,
+            mode=1,
+            execution_time_sec=0.00465151
+        ),
+        BenchmarkResult(
+            test_case=1,
+            mode=2,
+            execution_time_sec=0.00568922
+        ),
+        BenchmarkResult(
+            test_case=2,
+            mode=1,
+            execution_time_sec=0.0134763
+        ),
+        BenchmarkResult(
+            test_case=2,
+            mode=2,
+            execution_time_sec=0.00927455
+        ),
+        BenchmarkResult(
+            test_case=3,
+            mode=1,
+            execution_time_sec=0.306793
+        ),
+        BenchmarkResult(
+            test_case=3,
+            mode=2,
+            execution_time_sec=0.0683105
+        ),
+        BenchmarkResult(
+            test_case=4,
+            mode=1,
+            execution_time_sec=0.895166
+        ),
+        BenchmarkResult(
+            test_case=4,
+            mode=2,
+            execution_time_sec=0.225392
+        ),
+        BenchmarkResult(
+            test_case=5,
+            mode=1,
+            execution_time_sec=2.10341
+        ),
+        BenchmarkResult(
+            test_case=5,
+            mode=2,
+            execution_time_sec=0.530915
+        ),
+    ]
+    plot_results(results)
+
 if __name__ == '__main__':
-    benchmark()
+    kek()
