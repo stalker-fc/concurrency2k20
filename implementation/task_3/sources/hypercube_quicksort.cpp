@@ -36,15 +36,13 @@ void distribute_data(char *filename, int **array, int &array_length, int **local
     delete[] procs_array_indices;
 }
 
-int get_partition_by_pivot_value(int *array, int left_index, int right_index, int pivot_value) {
-    int pivot_index = -1;
-    for (std::size_t i = left_index; i < right_index + 1; ++i) {
-        if (array[i] <= pivot_value) {
-            pivot_index++;
-            std::swap(array[pivot_index], array[i]);
+int get_pivot_value_position(int *array, int array_length, int pivot_value) {
+    for (std::size_t i = 1; i < array_length; ++i) {
+        if (array[i] > pivot_value) {
+            return i - 1;
         }
     }
-    return pivot_index;
+    return array_length - 1;
 }
 
 int get_pivot_value(int *local_array, int local_array_length, int mask, MPI_Request request, MPI_Status status) {
@@ -53,7 +51,7 @@ int get_pivot_value(int *local_array, int local_array_length, int mask, MPI_Requ
     if (procs_rank % mask == 0) {
         pivot = 0;
         if (local_array_length != 0) {
-            pivot = local_array[0];
+            pivot = local_array[local_array_length / 2];
         }
         for (std::size_t i = procs_rank + 1; i < procs_rank + mask; ++i) {
             MPI_Isend(&pivot, 1, MPI_INT, i, 0, MPI_COMM_WORLD, &request);
@@ -65,6 +63,26 @@ int get_pivot_value(int *local_array, int local_array_length, int mask, MPI_Requ
     }
     MPI_Wait(&request, &status);
     return pivot;
+}
+
+void merge_data(int *new_array, int *array, int array_length, int *buffer, int buffer_length) {
+    int array_index = 0;
+    int buffer_index = 0;
+    for (int i = 0; i < array_length + buffer_length; ++i) {
+        if (array_index >= array_length) {
+            new_array[i] = buffer[buffer_index];
+            ++buffer_index;
+        } else if (buffer_index >= buffer_length) {
+            new_array[i] = array[array_index];
+            ++array_index;
+        } else if (array[array_index] < buffer[buffer_index]) {
+            new_array[i] = array[array_index];
+            ++array_index;
+        } else {
+            new_array[i] = buffer[buffer_index];
+            ++buffer_index;
+        }
+    }
 }
 
 
@@ -91,17 +109,17 @@ void hypercube_quicksort(int *&local_array, int &local_array_length) {
     int new_local_array_length;
 
     int pivot_value;
+    quicksort(local_array, 0, local_array_length - 1);
     for (std::size_t stage_index = hypercube_dimension; stage_index > 0; --stage_index) {
         // получаем опорное значение
         pivot_value = get_pivot_value(local_array, local_array_length, mask, request, status);
         // разбиваем массив на 2 половины согласно значению опорного элемента
-        int pivot_index = get_partition_by_pivot_value(local_array, 0, local_array_length - 1, pivot_value);
-
+        int pivot_index = get_pivot_value_position(local_array, local_array_length, pivot_value);
         mask = mask >> 1;
         // производим обмен половин
         // определяем партнера по разнице в N-ом бите
         if (((procs_rank & mask) >> (stage_index - 1)) == 0) {
-            // собираем части меньшие опорного элемента (левые)
+            // собираем части меньшие либо равные опорному элементу (левые)
             partner_procs_rank = procs_rank + mask;
             // скажем паре, сколько передадим ему и узнаем, сколько нужно будет принимать значений
             send_count = local_array_length - pivot_index - 1;
@@ -127,6 +145,7 @@ void hypercube_quicksort(int *&local_array, int &local_array_length) {
             MPI_Sendrecv(send_buffer, send_count, MPI_INT, partner_procs_rank, 0,
                          receive_buffer, receive_count, MPI_INT, partner_procs_rank, 0,
                          MPI_COMM_WORLD, &status);
+            merge_data(new_local_array, local_array, pivot_index + 1, receive_buffer, receive_count);
         } else {
             // собираю части большие опорного элемента (правые)
             partner_procs_rank = procs_rank - mask;
@@ -154,13 +173,14 @@ void hypercube_quicksort(int *&local_array, int &local_array_length) {
             MPI_Sendrecv(send_buffer, send_count, MPI_INT, partner_procs_rank, 0,
                          receive_buffer, receive_count, MPI_INT, partner_procs_rank, 0,
                          MPI_COMM_WORLD, &status);
+            merge_data(new_local_array,
+                       &(local_array[pivot_index + 1]), local_array_length - pivot_index - 1,
+                       receive_buffer, receive_count);
         }
         delete[] local_array;
         local_array = new_local_array;
         local_array_length = new_local_array_length;
     }
-
-    quicksort(local_array, 0, local_array_length - 1);
 }
 
 
@@ -199,13 +219,13 @@ void parallel_sort_array(char *filename) {
     merge_local_arrays(array, array_length, local_array, local_array_length);
 
     if (procs_rank == 0) {
+        double end_time = MPI_Wtime();
+        std::cout << procs_num << " " << end_time - start_time << std::endl;
         bool is_correct = is_result_correct(array, array_length);
         if (!is_correct) {
             std::cerr << "Array has sorted incorrectly." << std::endl;
             std::exit(1);
         }
-        double end_time = MPI_Wtime();
-        std::cout << procs_num << " " << end_time - start_time << std::endl;
     }
     delete[] array;
     delete[] local_array;

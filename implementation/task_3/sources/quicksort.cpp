@@ -43,11 +43,11 @@ void sort_array(char *filename) {
     get_array(filename, &array, array_length);
     double start_time = MPI_Wtime();
     quicksort(array, 0, array_length - 1);
+    double end_time = MPI_Wtime();
+    std::cout << "1 " << end_time - start_time << std::endl;
     bool is_correct = is_result_correct(array, array_length);
     if (!is_correct) {
         std::cout << "Array has sorted incorrectly." << std::endl;
         std::exit(1);
     }
-    double end_time = MPI_Wtime();
-    std::cout << "1 " << end_time - start_time << std::endl;
 }

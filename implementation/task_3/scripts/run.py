@@ -57,18 +57,21 @@ def benchmark():
     for test_case, length in TEST_CASES.items():
         generate_random_array(length, ARRAY_PATH)
         for mode in MODES:
-            st = time.time()
-            script_mode = 1 if mode < 2 else 2
-            exit_code = subprocess.call(["mpiexec", "-n", str(NUM_OF_PROCESSES[mode]),
-                                         EXECUTABLE_FILE, ARRAY_PATH, str(script_mode)])
-            if exit_code != 0:
-                print(f'Error in benchmarking. Test Case `{test_case}`, mode `{mode}`')
-            execution_time_sec = time.time() - st
-            benchmark_results.append(BenchmarkResult(
-                test_case,
-                mode,
-                execution_time_sec
-            ))
+            for i in range(5):
+                st = time.time()
+                script_mode = 1 if mode < 2 else 2
+                exit_code = subprocess.call(["mpiexec", "-n", str(NUM_OF_PROCESSES[mode]),
+                                             EXECUTABLE_FILE, ARRAY_PATH, str(script_mode)])
+                if exit_code != 0:
+                    print(f'Error in benchmarking. Test Case `{test_case}`, mode `{mode}`')
+                execution_time_sec = time.time() - st
+                benchmark_results.append(BenchmarkResult(
+                    test_case,
+                    mode,
+                    execution_time_sec
+                ))
+            print()
+        print()
 
     plot_results(benchmark_results)
 
