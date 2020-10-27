@@ -15,6 +15,7 @@ TEST_CASES = {
     2: 1_000_000,
     3: 5_000_000,
     4: 10_000_000,
+    5: 20_000_000,
 }
 MODES = {
     1: "sequential",
@@ -25,7 +26,7 @@ MODES = {
 MODE_COLORS = {
     1: '#FB707F',
     2: '#008ECC',
-    3: '#6495ED',
+    3: '#3CB371',
 }
 
 SERIAL_MODE = 1
@@ -130,7 +131,7 @@ def plot_time_graphics(benchmark_results: List[BenchmarkResult]):
 
 def plot_efficiency_graphics(benchmark_results: List[BenchmarkResult]):
     plt.figure(figsize=(4, 4))
-    left, width = 0.12, 0.85
+    left, width = 0.14, 0.85
     bottom, height = 0.1, 0.85
 
     ax = plt.axes([left, bottom, width, height])
